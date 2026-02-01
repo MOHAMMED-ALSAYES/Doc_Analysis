@@ -1,0 +1,22 @@
+{
+  "document_number": "20251117-083911",
+  "created_at": "2025-11-17T08:39:11.607880",
+  "paths": {
+    "original_dir": "D:\\\\مركز الاستشارات والتنمية/from_file/نموذج/2025/11/17/20251117-083911",
+    "original_file": "D:\\\\مركز الاستشارات والتنمية/from_file/نموذج/2025/11/17/20251117-083911/نظام.pdf",
+    "pdf_file": "D:\\\\مركز الاستشارات والتنمية/system/pdf/2025/11/20251117-083911.pdf",
+    "ocr_text_file": "D:\\\\مركز الاستشارات والتنمية/system/ocr_text/2025/11/20251117-083911.txt",
+    "thumbnail_file": "D:\\\\مركز الاستشارات والتنمية/system/thumbnails/2025/11/20251117-083911.png",
+    "images_dir": "D:\\\\مركز الاستشارات والتنمية/system/images/2025/11/17/20251117-083911",
+    "source_folder": "from_file",
+    "classification": "نموذج",
+    "final_filename": "نظام.pdf"
+  },
+  "metadata": {
+    "title": "نظام",
+    "classification": "نموذج",
+    "direction": "صادر",
+    "ocr_accuracy": 100.0,
+    "source_type": "file"
+  }
+}

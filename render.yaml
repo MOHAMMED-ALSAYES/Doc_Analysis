@@ -1,0 +1,79 @@
+# Render Blueprint - نشر تلقائي للمشروع على Render.com
+# https://render.com/docs/blueprint-spec
+
+services:
+  # Backend API - FastAPI
+  - type: web
+    name: doc-analysis-api
+    runtime: docker
+    dockerfilePath: ./docker/python.Dockerfile
+    dockerContext: .
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: doc-analysis-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: doc-analysis-redis
+          type: redis
+          property: connectionString
+      - key: APP_NAME
+        value: Doc Analysis API
+      - key: APP_ENV
+        value: production
+      - key: CORS_ALLOW_ORIGINS
+        value: "*"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_ACCESS_EXPIRES
+        value: 3600
+      - key: JWT_REFRESH_EXPIRES
+        value: 1209600
+      - key: TESSERACT_LANGS
+        value: ara+eng
+      - key: FILE_STORAGE_ROOT
+        value: /app/storage
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false  # ستُدخل يدوياً للأمان
+    disk:
+      name: doc-analysis-storage
+      mountPath: /app/storage
+      sizeGB: 1
+    healthCheckPath: /api/health
+    plan: free
+
+  # Frontend - React/Vite
+  - type: web
+    name: doc-analysis-frontend
+    runtime: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: doc-analysis-api
+          type: web
+          property: host
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    plan: free
+
+  # Redis for Celery
+  - type: redis
+    name: doc-analysis-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+
+databases:
+  # PostgreSQL Database
+  - name: doc-analysis-db
+    plan: free
+    databaseName: docdb
+    user: docuser

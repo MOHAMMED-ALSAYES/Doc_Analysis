@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #0A0A0A;
+  color: #E0F7FA;
+}
+
+.btn-primary {
+  @apply bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-xl shadow-cyan transition;
+}
+
+.card {
+  @apply bg-base-800 border border-[rgba(0,188,212,0.12)] rounded-xl p-4 shadow;
+}
+
+
+
