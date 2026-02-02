@@ -38,9 +38,10 @@ def seed_roles_and_admin(db: Session):
         
         admin_role = db.query(Role).filter(Role.name == "system_admin").first()
         
-        # admin user
-        admin_username = settings.__dict__.get("ADMIN_USERNAME", "admin")
-        admin_password = settings.__dict__.get("ADMIN_PASSWORD", "admin123")
+        # admin user - always use admin123 as default for simplicity
+        admin_username = "admin"
+        admin_password = "admin123"
+        
         user = db.query(User).filter(User.username == admin_username).first()
         if not user:
             u = User(
@@ -53,9 +54,12 @@ def seed_roles_and_admin(db: Session):
             )
             db.add(u)
             db.commit()
-            print(f"[OK] تم إنشاء مستخدم admin: {admin_username}")
+            print(f"[OK] تم إنشاء مستخدم admin: {admin_username} | كلمة المرور: {admin_password}")
         else:
-            print(f"[OK] مستخدم admin موجود بالفعل: {admin_username}")
+            # تحديث كلمة المرور دائماً للتأكد
+            user.password_hash = hash_password(admin_password)
+            db.commit()
+            print(f"[OK] تم تحديث كلمة مرور admin: {admin_username} | كلمة المرور: {admin_password}")
     except Exception as e:
         print(f"[WARN]  تحذير: لم يتم إنشاء الأدوار/المستخدمين: {e}")
         print("قد تحتاج إلى تشغيل migrations أولاً: alembic upgrade head")
