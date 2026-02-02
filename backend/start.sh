@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting Doc Analysis API..."
+echo "🚀 Starting Doc Analysis API (Lite Version)..."
 
 # Run database migrations
 echo "📦 Running database migrations..."
