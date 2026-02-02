@@ -40,9 +40,14 @@ RUN mkdir -p /app/storage
 # Expose port
 EXPOSE $PORT
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:$PORT/health || exit 1
+# Copy and set permissions for startup script
+COPY start.sh .
+RUN chmod +x start.sh
 
-# Run with gunicorn for production (1 worker for free tier to save memory)
-CMD gunicorn app.main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120 --graceful-timeout 30
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
+
+# Run startup script (migrations + gunicorn)
+CMD ["./start.sh"]
+
