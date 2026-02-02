@@ -7,7 +7,7 @@ from typing import Dict, Any
 from datetime import datetime
 import re
 
-from .ocr import extract_text_smart, classify_document_smart, suggest_title_from_text
+from .ocr import extract_text_smart
 from .convert import convert_to_pdf
 from .storage import build_document_paths, save_text_file, get_file_info
 from .ai_classifier import ai_classifier
