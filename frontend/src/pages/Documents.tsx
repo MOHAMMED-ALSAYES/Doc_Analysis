@@ -130,6 +130,21 @@ function Documents() {
     }
   }
 
+  const deleteDocument = async () => {
+    if (!selectedDoc) return
+    if (!window.confirm('هل أنت متأكد من حذف هذه الوثيقة؟ لا يمكن التراجع عن هذا الإجراء.')) return
+
+    try {
+      await api.delete(`/documents/${selectedDoc.id}`)
+      showToast('تم حذف الوثيقة بنجاح')
+      setSelectedDoc(null)
+      load() // تحديث القائمة
+    } catch (e: any) {
+      console.error("Delete error:", e)
+      showToast('فشل الحذف: ' + (e?.response?.data?.detail || 'قد لا تملك صلاحية الحذف'), 'error')
+    }
+  }
+
   const handlePrintPreview = () => {
     if (!selectedDoc) {
       alert('الرجاء اختيار وثيقة أولاً')
@@ -731,6 +746,12 @@ function Documents() {
                       onClick={() => setIsEditing(true)}
                     >
                       تعديل البيانات الوصفية
+                    </button>
+                    <button
+                      className="w-full px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:border-red-500/50 transition mt-2"
+                      onClick={deleteDocument}
+                    >
+                      حذف الوثيقة
                     </button>
                   </>
                 ) : (

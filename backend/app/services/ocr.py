@@ -239,30 +239,54 @@ def extract_text_from_image(image_path: Path, langs: str = "ara+eng") -> Tuple[s
         return "", 0.0
 
 
+from PIL import Image, ImageOps, ImageFilter
+
 def ocr_image_to_text(pil_image: Image.Image, langs: str = "ara+eng") -> Tuple[str, float]:
-    """تشغيل Tesseract OCR على الصورة"""
+    """تشغيل Tesseract OCR على الصورة مع تحسين الجودة"""
     try:
-        # تحويل إلى RGB إذا لزم الأمر
-        if pil_image.mode in ('RGBA', 'LA', 'P'):
-            rgb_img = Image.new('RGB', pil_image.size, (255, 255, 255))
-            if pil_image.mode == 'P':
-                pil_image = pil_image.convert('RGBA')
-            rgb_img.paste(pil_image, mask=pil_image.split()[-1] if pil_image.mode == 'RGBA' else None)
-            pil_image = rgb_img
-        elif pil_image.mode != 'RGB':
-            pil_image = pil_image.convert('RGB')
+        # 1. تحويل إلى Scala رمادية (Grayscale)
+        if pil_image.mode != 'L':
+             gray_img = pil_image.convert('L')
+        else:
+             gray_img = pil_image
         
-        # استخدام Tesseract مع خيارات محسّنة
-        custom_config = r'--oem 3 --psm 6 -c preserve_interword_spaces=1'
-        text = pytesseract.image_to_string(pil_image, lang=langs, config=custom_config)
+        # 2. تحسين التباين تلقائياً (Auto Contrast)
+        # هذا يساعد جداً في الصور الملتقطة بالكاميرا حيث الإضاءة غير متساوية
+        enhanced_img = ImageOps.autocontrast(gray_img, cutoff=2)
         
+        # 3. تطبيق فلتر لزيادة الحدة (Sharpen) لتوضيح الحروف
+        sharpened_img = enhanced_img.filter(ImageFilter.SHARPEN)
+        
+        # 4. تكبير الصورة قليلاً إذا كانت صغيرة (لتحسين دقة Tesseract)
+        width, height = sharpened_img.size
+        if width < 1500:
+             factor = 2
+             sharpened_img = sharpened_img.resize((width * factor, height * factor), Image.Resampling.LANCZOS)
+
+        # استخدام Tesseract
+        # psm 3: Fully automatic page segmentation, but no OSD. (Default)
+        # psm 6: Assume a single uniform block of text.
+        # للكاميرا والصور العشوائية، psm 3 أو 1 أفضل.
+        custom_config = r'--oem 3 --psm 3' 
+        
+        text = pytesseract.image_to_string(sharpened_img, lang=langs, config=custom_config)
+        
+        # حساب دقة تقريبية بناءً على طول النص
         if text.strip():
-            text = _post_process_text(text)
-            word_count = len(text.split())
-            accuracy = min(85.0, 50.0 + (word_count / 10))
-            return text.strip(), round(accuracy, 2)
+            processed_text = _post_process_text(text)
+            word_count = len(processed_text.split())
+            # معادلة بسيطة: كلما زاد عدد الكلمات، زادت الثقة (إلى حد ما)
+            accuracy = min(95.0, 40.0 + (word_count / 5)) 
+            return processed_text, round(accuracy, 2)
+            
     except Exception as e:
         print(f"[ERROR] Tesseract error: {e}")
+        # محاولة احتياطية بدون معالجة في حال فشل الفلاتر
+        try:
+             text = pytesseract.image_to_string(pil_image, lang=langs)
+             return text, 50.0
+        except:
+             pass
     
     return "", 0.0
 

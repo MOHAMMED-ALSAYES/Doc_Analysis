@@ -1276,3 +1276,88 @@ def download_original_file(
             "Cache-Control": "no-cache"
         }
     )
+
+
+@router.delete("/{document_id}")
+def delete_document(
+    document_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    request: Request = None,
+):
+    """حذف وثيقة"""
+    # التحقق من الصلاحيات
+    role = db.query(Role).filter(Role.id == current_user.role_id).first() if current_user.role_id else None
+    merged = (role.permissions if role and role.permissions else {}).copy()
+    if getattr(current_user, 'permissions', None):
+        merged.update(current_user.permissions)
+    
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="الوثيقة غير موجودة")
+
+    # التحقق من صلاحية الحذف
+    # للسماح بالحذف، يجب أن يملك المستخدم صلاحية 'delete_documents' أو أن يكون مسؤول النظام
+    has_permission = merged.get("delete_documents") or current_user.username == "admin"
+    
+    # السماح للمالك أيضاً بحذف وثائقه إذا لم تكن مقيدة (اختياري، يمكن تفعيله)
+    # is_owner = doc.uploader_id == current_user.id
+    
+    if not has_permission:
+        raise HTTPException(status_code=403, detail="ليس لديك صلاحية لحذف الوثائق")
+
+    try:
+        # حذف الملفات الفعلية
+        paths_to_delete = [
+            doc.original_file_path,
+            doc.pdf_path,
+            doc.ocr_text_path
+        ]
+        
+        for path_str in paths_to_delete:
+            if path_str:
+                path = Path(path_str)
+                if path.exists():
+                    try:
+                        path.unlink()
+                    except Exception as e:
+                        print(f"[WARN] Failed to delete file {path}: {e}")
+
+        # حذف المرفقات المرتبطة
+        attachments = db.query(Attachment).filter(Attachment.document_id == doc.id).all()
+        for att in attachments:
+            if att.file_path:
+                path = Path(att.file_path)
+                if path.exists():
+                    try:
+                        path.unlink()
+                    except:
+                        pass
+            db.delete(att)
+
+        # تسجيل النشاط قبل الحذف
+        try:
+            log_activity(
+                db,
+                user_id=current_user.id,
+                action="delete_document",
+                details={
+                    "document_number": doc.document_number,
+                    "title": doc.title
+                },
+                ip=request.client.host if request else None,
+                document_id=doc.id 
+            )
+        except:
+            pass
+
+        # حذف السجل
+        db.delete(doc)
+        db.commit()
+        
+        return {"status": "success", "message": "تم حذف الوثيقة بنجاح"}
+
+    except Exception as e:
+        db.rollback()
+        print(f"[ERROR] Delete document failed: {e}")
+        raise HTTPException(status_code=500, detail=f"فشل حذف الوثيقة: {str(e)}")
