@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
+import { useTheme } from '../contexts/ThemeContext'
 
 type UserRow = {
   id: number
@@ -16,9 +17,10 @@ type UserRow = {
 }
 
 function UsersAdmin() {
+  const { theme } = useTheme()
   const [users, setUsers] = useState<UserRow[]>([])
   const [showAdd, setShowAdd] = useState(false)
-  
+
   // حقول المستخدم الجديد
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -28,7 +30,7 @@ function UsersAdmin() {
   const [roleName, setRoleName] = useState<'employee' | 'system_admin'>('employee')
   const [analyzeScope, setAnalyzeScope] = useState<'own' | 'all' | 'selected'>('own')
   const [mustChangePassword, setMustChangePassword] = useState(true)
-  
+
   // الصلاحيات
   const [permViewAll, setPermViewAll] = useState(false)
   const [permManageOwn, setPermManageOwn] = useState(true)
@@ -36,7 +38,7 @@ function UsersAdmin() {
   const [permShareOwn, setPermShareOwn] = useState(false)
   const [permSearchOwn, setPermSearchOwn] = useState(true)
   const [permViewReports, setPermViewReports] = useState(true)
-  
+
   // التعديل
   const [editId, setEditId] = useState<number | null>(null)
   const [editName, setEditName] = useState('')
@@ -53,7 +55,7 @@ function UsersAdmin() {
   const [editPermShareOwn, setEditPermShareOwn] = useState(false)
   const [editPermSearchOwn, setEditPermSearchOwn] = useState(true)
   const [editPermViewReports, setEditPermViewReports] = useState(true)
-  
+
   const [msg, setMsg] = useState('')
   const [msgType, setMsgType] = useState<'success' | 'error'>('success')
 
@@ -72,7 +74,7 @@ function UsersAdmin() {
     const refreshInterval = setInterval(() => {
       load()
     }, 5000) // كل 5 ثوان
-    
+
     return () => clearInterval(refreshInterval)
   }, [])
 
@@ -102,7 +104,7 @@ function UsersAdmin() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setMsg('')
-    
+
     if (!username || !password) {
       showMessage('اسم المستخدم وكلمة المرور مطلوبان', 'error')
       return
@@ -232,49 +234,69 @@ function UsersAdmin() {
     }
   }
 
+  // فئات CSS مشتركة
+  const inputClass = theme === 'dark'
+    ? "w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+    : "w-full px-4 py-2.5 rounded-xl bg-white border-2 border-cyan-200 focus:border-cyan-500 focus:outline-none transition text-slate-700"
+
+  const selectClass = theme === 'dark'
+    ? "w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+    : "w-full px-4 py-2.5 rounded-xl bg-white border-2 border-cyan-200 focus:border-cyan-500 focus:outline-none transition text-slate-700"
+
+  const labelClass = theme === 'dark' ? "block text-sm text-text-secondary mb-2" : "block text-sm text-slate-600 mb-2"
+
+  const sectionTitleClass = theme === 'dark'
+    ? "text-sm font-medium text-text-secondary mb-3 flex items-center gap-2"
+    : "text-sm font-medium text-slate-600 mb-3 flex items-center gap-2"
+
+  const checkboxLabelClass = theme === 'dark'
+    ? "flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition"
+    : "flex items-center gap-2 text-slate-600 hover:text-cyan-600 cursor-pointer transition"
+
   return (
     <div className="space-y-6">
       {/* رأس الصفحة */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-cyan-400 mb-1">إدارة المستخدمين</h1>
-            <p className="text-text-secondary text-sm">إضافة وتعديل وحذف المستخدمين في النظام • التحديث التلقائي كل 5 ثوان</p>
+      <div className={`rounded-xl p-6 ${theme === 'dark' ? 'card' : 'bg-white border-2 border-cyan-200 shadow-lg'}`}>
+        <div className={`${theme === 'light' ? 'border-t-4 border-t-cyan-500 -mt-6 -mx-6 px-6 pt-6 mb-4' : ''}`}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className={`text-2xl font-bold mb-1 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>إدارة المستخدمين</h1>
+              <p className={`text-sm ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>إضافة وتعديل وحذف المستخدمين في النظام • التحديث التلقائي كل 5 ثوان</p>
+            </div>
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${theme === 'dark' ? 'btn-primary' : 'bg-cyan-500 text-white hover:bg-cyan-600 shadow-md'}`}
+              onClick={() => {
+                resetForm()
+                setShowAdd(true)
+              }}
+            >
+              <span className="text-xl">+</span>
+              <span>إضافة مستخدم جديد</span>
+            </button>
           </div>
-          <button
-            className="btn-primary flex items-center gap-2"
-            onClick={() => {
-              resetForm()
-              setShowAdd(true)
-            }}
-          >
-            <span className="text-xl">+</span>
-            <span>إضافة مستخدم جديد</span>
-          </button>
         </div>
 
         {/* رسالة النجاح/الخطأ */}
         {msg && (
           <div
-            className={`px-4 py-3 rounded-xl border ${
-              msgType === 'success'
-                ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'
-                : 'bg-red-500/10 border-red-500/30 text-red-400'
-            }`}
+            className={`px-4 py-3 rounded-xl border ${msgType === 'success'
+              ? (theme === 'dark' ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : 'bg-cyan-50 border-cyan-300 text-cyan-600')
+              : (theme === 'dark' ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-red-50 border-red-300 text-red-600')
+              }`}
           >
             {msg}
-        </div>
+          </div>
         )}
       </div>
 
       {/* نموذج إضافة مستخدم جديد */}
       {showAdd && (
-        <div className="card">
+        <div className={`rounded-xl p-6 ${theme === 'dark' ? 'card' : 'bg-white border-2 border-cyan-200 shadow-lg'}`}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-cyan-400">مستخدم جديد</h2>
+            <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>مستخدم جديد</h2>
             <button
               type="button"
-              className="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
+              className={`px-4 py-2 rounded-lg transition-colors ${theme === 'dark' ? 'bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20' : 'bg-red-50 border border-red-300 text-red-600 hover:bg-red-100'}`}
               onClick={() => setShowAdd(false)}
             >
               إلغاء
@@ -284,17 +306,17 @@ function UsersAdmin() {
           <form onSubmit={submit} className="space-y-6">
             {/* معلومات الحساب */}
             <div>
-              <h3 className="text-sm font-medium text-text-secondary mb-3 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+              <h3 className={sectionTitleClass}>
+                <div className={`w-2 h-2 rounded-full ${theme === 'dark' ? 'bg-cyan-400' : 'bg-cyan-500'}`}></div>
                 معلومات الحساب
               </h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">
+                  <label className={labelClass}>
                     اسم المستخدم <span className="text-red-400">*</span>
                   </label>
                   <input
-                    className="w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+                    className={inputClass}
                     placeholder="username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -302,12 +324,12 @@ function UsersAdmin() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">
+                  <label className={labelClass}>
                     كلمة المرور المؤقتة <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="password"
-                    className="w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+                    className={inputClass}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -319,35 +341,35 @@ function UsersAdmin() {
 
             {/* المعلومات الشخصية */}
             <div>
-              <h3 className="text-sm font-medium text-text-secondary mb-3 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+              <h3 className={sectionTitleClass}>
+                <div className={`w-2 h-2 rounded-full ${theme === 'dark' ? 'bg-cyan-400' : 'bg-cyan-500'}`}></div>
                 المعلومات الشخصية
               </h3>
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">الاسم الكامل</label>
+                  <label className={labelClass}>الاسم الكامل</label>
                   <input
-                    className="w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+                    className={inputClass}
                     placeholder="الاسم الكامل"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">البريد الإلكتروني</label>
+                  <label className={labelClass}>البريد الإلكتروني</label>
                   <input
                     type="email"
-                    className="w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+                    className={inputClass}
                     placeholder="email@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">رقم الهاتف</label>
+                  <label className={labelClass}>رقم الهاتف</label>
                   <input
                     type="tel"
-                    className="w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+                    className={inputClass}
                     placeholder="+964 XXX XXX XXXX"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -358,36 +380,36 @@ function UsersAdmin() {
 
             {/* الدور والصلاحيات */}
             <div>
-              <h3 className="text-sm font-medium text-text-secondary mb-3 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+              <h3 className={sectionTitleClass}>
+                <div className={`w-2 h-2 rounded-full ${theme === 'dark' ? 'bg-cyan-400' : 'bg-cyan-500'}`}></div>
                 الدور والصلاحيات
               </h3>
               <div className="grid md:grid-cols-3 gap-4">
-            <div>
-                  <label className="block text-sm text-text-secondary mb-2">الدور</label>
+                <div>
+                  <label className={labelClass}>الدور</label>
                   <select
-                    className="w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+                    className={selectClass}
                     value={roleName}
                     onChange={(e) => setRoleName(e.target.value as any)}
                   >
-                <option value="employee">موظف</option>
-                <option value="system_admin">مدير النظام</option>
-              </select>
-            </div>
-            <div>
-                  <label className="block text-sm text-text-secondary mb-2">نطاق التحليل</label>
+                    <option value="employee">موظف</option>
+                    <option value="system_admin">مدير النظام</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>نطاق التحليل</label>
                   <select
-                    className="w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+                    className={selectClass}
                     value={analyzeScope}
                     onChange={(e) => setAnalyzeScope(e.target.value as any)}
                   >
-                <option value="own">وثائقه فقط</option>
-                <option value="all">كل الوثائق</option>
-                <option value="selected">وثائق محددة</option>
-              </select>
-            </div>
+                    <option value="own">وثائقه فقط</option>
+                    <option value="all">كل الوثائق</option>
+                    <option value="selected">وثائق محددة</option>
+                  </select>
+                </div>
                 <div className="flex items-end">
-                  <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                  <label className={checkboxLabelClass}>
                     <input
                       type="checkbox"
                       className="w-4 h-4 rounded border-[rgba(0,188,212,0.12)] bg-base-900 text-cyan-500 focus:ring-cyan-500"
@@ -402,12 +424,12 @@ function UsersAdmin() {
 
             {/* صلاحيات الوثائق */}
             <div>
-              <h3 className="text-sm font-medium text-text-secondary mb-3 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+              <h3 className={sectionTitleClass}>
+                <div className={`w-2 h-2 rounded-full ${theme === 'dark' ? 'bg-cyan-400' : 'bg-cyan-500'}`}></div>
                 صلاحيات الوثائق
               </h3>
               <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -416,7 +438,7 @@ function UsersAdmin() {
                   />
                   <span>الاطلاع على كل الوثائق</span>
                 </label>
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -425,7 +447,7 @@ function UsersAdmin() {
                   />
                   <span>إدارة وثائقه</span>
                 </label>
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -434,7 +456,7 @@ function UsersAdmin() {
                   />
                   <span>حذف وثائقه</span>
                 </label>
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -443,7 +465,7 @@ function UsersAdmin() {
                   />
                   <span>مشاركة وثائقه</span>
                 </label>
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -452,7 +474,7 @@ function UsersAdmin() {
                   />
                   <span>البحث داخل وثائقه</span>
                 </label>
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -465,13 +487,13 @@ function UsersAdmin() {
             </div>
 
             {/* أزرار الإجراءات */}
-            <div className="flex gap-3 pt-4 border-t border-[rgba(0,188,212,0.12)]">
-              <button type="submit" className="btn-primary px-8">
+            <div className={`flex gap-3 pt-4 border-t ${theme === 'dark' ? 'border-[rgba(0,188,212,0.12)]' : 'border-cyan-200'}`}>
+              <button type="submit" className={`px-8 py-2 rounded-xl transition-all ${theme === 'dark' ? 'btn-primary' : 'bg-cyan-500 text-white hover:bg-cyan-600 shadow-md'}`}>
                 حفظ المستخدم
               </button>
               <button
                 type="button"
-                className="px-6 py-2 rounded-xl border border-[rgba(0,188,212,0.12)] hover:border-cyan-500 text-text-secondary hover:text-cyan-400 transition"
+                className={`px-6 py-2 rounded-xl border transition ${theme === 'dark' ? 'border-[rgba(0,188,212,0.12)] hover:border-cyan-500 text-text-secondary hover:text-cyan-400' : 'border-cyan-200 hover:border-cyan-500 text-slate-600 hover:text-cyan-600'}`}
                 onClick={() => setShowAdd(false)}
               >
                 إلغاء
@@ -482,12 +504,12 @@ function UsersAdmin() {
       )}
 
       {/* جدول المستخدمين */}
-      <div className="card">
-        <h2 className="text-xl font-semibold text-cyan-400 mb-4">قائمة المستخدمين ({users.length})</h2>
+      <div className={`rounded-xl p-6 ${theme === 'dark' ? 'card' : 'bg-white border-2 border-cyan-200 shadow-lg'}`}>
+        <h2 className={`text-xl font-semibold mb-4 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>قائمة المستخدمين ({users.length})</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-text-secondary border-b border-[rgba(0,188,212,0.12)]">
+              <tr className={`${theme === 'dark' ? 'text-text-secondary border-b border-[rgba(0,188,212,0.12)]' : 'text-slate-600 border-b-2 border-cyan-200 bg-cyan-50/50'}`}>
                 <th className="text-right py-3 px-2">#</th>
                 <th className="text-right py-3 px-2">اسم المستخدم</th>
                 <th className="text-right py-3 px-2">الاسم الكامل</th>
@@ -503,31 +525,29 @@ function UsersAdmin() {
               {users.map((u) => (
                 <tr
                   key={u.id}
-                  className="border-b border-[rgba(0,188,212,0.12)] hover:bg-base-900/50 transition"
+                  className={`${theme === 'dark' ? 'border-b border-[rgba(0,188,212,0.12)] hover:bg-base-900/50' : 'border-b border-cyan-100 hover:bg-cyan-50/50'} transition`}
                 >
-                  <td className="py-3 px-2 text-text-secondary">{u.id}</td>
-                  <td className="py-3 px-2 font-medium">{u.username}</td>
-                  <td className="py-3 px-2 text-text-secondary">{u.full_name || '—'}</td>
-                  <td className="py-3 px-2 text-text-secondary text-xs">{u.email || '—'}</td>
-                  <td className="py-3 px-2 text-text-secondary">{u.phone || '—'}</td>
+                  <td className={`py-3 px-2 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>{u.id}</td>
+                  <td className={`py-3 px-2 font-medium ${theme === 'dark' ? '' : 'text-slate-700'}`}>{u.username}</td>
+                  <td className={`py-3 px-2 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>{u.full_name || '—'}</td>
+                  <td className={`py-3 px-2 text-xs ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>{u.email || '—'}</td>
+                  <td className={`py-3 px-2 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>{u.phone || '—'}</td>
                   <td className="py-3 px-2">
                     <span
-                      className={`inline-block px-2 py-1 rounded-lg text-xs ${
-                        u.role_name === 'system_admin'
-                          ? 'bg-cyan-500/20 text-cyan-400'
-                          : 'bg-base-900 text-text-secondary'
-                      }`}
+                      className={`inline-block px-2 py-1 rounded-lg text-xs ${u.role_name === 'system_admin'
+                        ? (theme === 'dark' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-cyan-100 text-cyan-600')
+                        : (theme === 'dark' ? 'bg-base-900 text-text-secondary' : 'bg-slate-100 text-slate-600')
+                        }`}
                     >
                       {u.role_name === 'system_admin' ? 'مدير النظام' : 'موظف'}
                     </span>
                   </td>
                   <td className="py-3 px-2">
                     <span
-                      className={`inline-block px-2 py-1 rounded-lg text-xs ${
-                        u.is_active
-                          ? 'bg-green-500/20 text-green-400'
-                          : 'bg-red-500/20 text-red-400'
-                      }`}
+                      className={`inline-block px-2 py-1 rounded-lg text-xs ${u.is_active
+                        ? (theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600')
+                        : (theme === 'dark' ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600')
+                        }`}
                     >
                       {u.is_active ? 'نشط' : 'معطل'}
                     </span>
@@ -535,42 +555,42 @@ function UsersAdmin() {
                   <td className="py-3 px-2">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`inline-block w-2 h-2 rounded-full ${
-                          u.online ? 'bg-cyan-400 animate-pulse' : 'bg-gray-600'
-                        }`}
+                        className={`inline-block w-2 h-2 rounded-full ${u.online
+                          ? (theme === 'dark' ? 'bg-cyan-400 animate-pulse' : 'bg-cyan-500 animate-pulse')
+                          : (theme === 'dark' ? 'bg-gray-600' : 'bg-gray-400')
+                          }`}
                       ></span>
-                      <span className={u.online ? 'text-cyan-400' : 'text-text-secondary'}>
-                      {u.online ? 'متصل' : 'غير متصل'}
-                    </span>
+                      <span className={u.online ? (theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600') : (theme === 'dark' ? 'text-text-secondary' : 'text-slate-500')}>
+                        {u.online ? 'متصل' : 'غير متصل'}
+                      </span>
                     </div>
                   </td>
                   <td className="py-3 px-2 text-left">
                     <div className="flex gap-2 justify-end flex-wrap">
                       <button
-                        className="px-3 py-1.5 rounded-lg border border-[rgba(0,188,212,0.12)] hover:border-cyan-500 text-text-secondary hover:text-cyan-400 transition text-xs"
+                        className={`px-3 py-1.5 rounded-lg border transition text-xs ${theme === 'dark' ? 'border-[rgba(0,188,212,0.12)] hover:border-cyan-500 text-text-secondary hover:text-cyan-400' : 'border-cyan-200 hover:border-cyan-500 text-slate-600 hover:text-cyan-600 hover:bg-cyan-50'}`}
                         onClick={() => startEdit(u)}
                       >
                         تعديل
                       </button>
                       <button
-                        className="px-3 py-1.5 rounded-lg border border-[rgba(168,85,247,0.3)] hover:border-purple-500 text-text-secondary hover:text-purple-400 transition text-xs"
+                        className={`px-3 py-1.5 rounded-lg border transition text-xs ${theme === 'dark' ? 'border-[rgba(168,85,247,0.3)] hover:border-purple-500 text-text-secondary hover:text-purple-400' : 'border-purple-200 hover:border-purple-500 text-slate-600 hover:text-purple-600 hover:bg-purple-50'}`}
                         onClick={() => resetPassword(u)}
                         title="إعادة تعيين كلمة المرور"
                       >
                         إعادة تعيين كلمة المرور
                       </button>
                       <button
-                        className={`px-3 py-1.5 rounded-lg border transition text-xs ${
-                          u.is_active
-                            ? 'border-[rgba(255,165,0,0.3)] hover:border-orange-500 text-text-secondary hover:text-orange-400'
-                            : 'border-[rgba(0,255,0,0.2)] hover:border-green-500 text-text-secondary hover:text-green-400'
-                        }`}
+                        className={`px-3 py-1.5 rounded-lg border transition text-xs ${u.is_active
+                          ? (theme === 'dark' ? 'border-[rgba(255,165,0,0.3)] hover:border-orange-500 text-text-secondary hover:text-orange-400' : 'border-orange-200 hover:border-orange-500 text-slate-600 hover:text-orange-600 hover:bg-orange-50')
+                          : (theme === 'dark' ? 'border-[rgba(0,255,0,0.2)] hover:border-green-500 text-text-secondary hover:text-green-400' : 'border-green-200 hover:border-green-500 text-slate-600 hover:text-green-600 hover:bg-green-50')
+                          }`}
                         onClick={() => toggleUserStatus(u)}
                       >
                         {u.is_active ? 'تعطيل' : 'تنشيط'}
                       </button>
                       <button
-                        className="px-3 py-1.5 rounded-lg border border-[rgba(255,0,0,0.3)] hover:border-red-500 text-text-secondary hover:text-red-400 transition text-xs"
+                        className={`px-3 py-1.5 rounded-lg border transition text-xs ${theme === 'dark' ? 'border-[rgba(255,0,0,0.3)] hover:border-red-500 text-text-secondary hover:text-red-400' : 'border-red-200 hover:border-red-500 text-slate-600 hover:text-red-600 hover:bg-red-50'}`}
                         onClick={() => deleteUser(u)}
                       >
                         حذف نهائي
@@ -586,12 +606,12 @@ function UsersAdmin() {
 
       {/* نموذج التعديل */}
       {editId !== null && (
-        <div className="card">
+        <div className={`rounded-xl p-6 ${theme === 'dark' ? 'card' : 'bg-white border-2 border-cyan-200 shadow-lg'}`}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-cyan-400">تعديل المستخدم #{editId}</h3>
+            <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>تعديل المستخدم #{editId}</h3>
             <button
               type="button"
-              className="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
+              className={`px-4 py-2 rounded-lg transition-colors ${theme === 'dark' ? 'bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20' : 'bg-red-50 border border-red-300 text-red-600 hover:bg-red-100'}`}
               onClick={() => setEditId(null)}
             >
               إلغاء
@@ -600,29 +620,29 @@ function UsersAdmin() {
           <div className="space-y-4">
             <div className="grid md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm text-text-secondary mb-2">الاسم الكامل</label>
+                <label className={labelClass}>الاسم الكامل</label>
                 <input
-                  className="w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+                  className={inputClass}
                   placeholder="الاسم الكامل"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm text-text-secondary mb-2">البريد الإلكتروني</label>
+                <label className={labelClass}>البريد الإلكتروني</label>
                 <input
                   type="email"
-                  className="w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+                  className={inputClass}
                   placeholder="email@example.com"
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm text-text-secondary mb-2">رقم الهاتف</label>
+                <label className={labelClass}>رقم الهاتف</label>
                 <input
                   type="tel"
-                  className="w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+                  className={inputClass}
                   placeholder="+964 XXX XXX XXXX"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
@@ -631,20 +651,20 @@ function UsersAdmin() {
             </div>
             <div className="grid md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm text-text-secondary mb-2">الدور</label>
+                <label className={labelClass}>الدور</label>
                 <select
-                  className="w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+                  className={selectClass}
                   value={editRole}
                   onChange={(e) => setEditRole(e.target.value as any)}
                 >
-                <option value="employee">موظف</option>
-                <option value="system_admin">مدير النظام</option>
-              </select>
+                  <option value="employee">موظف</option>
+                  <option value="system_admin">مدير النظام</option>
+                </select>
               </div>
               <div>
-                <label className="block text-sm text-text-secondary mb-2">نطاق التحليل</label>
+                <label className={labelClass}>نطاق التحليل</label>
                 <select
-                  className="w-full px-4 py-2.5 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition"
+                  className={selectClass}
                   value={editAnalyzeScope}
                   onChange={(e) => setEditAnalyzeScope(e.target.value as any)}
                 >
@@ -654,7 +674,7 @@ function UsersAdmin() {
                 </select>
               </div>
               <div className="flex items-end">
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -665,7 +685,7 @@ function UsersAdmin() {
                 </label>
               </div>
               <div className="flex items-end">
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -676,15 +696,15 @@ function UsersAdmin() {
                 </label>
               </div>
             </div>
-            
+
             {/* صلاحيات الوثائق */}
-              <div>
-              <h4 className="text-sm font-medium text-text-secondary mb-3 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+            <div>
+              <h4 className={sectionTitleClass}>
+                <div className={`w-2 h-2 rounded-full ${theme === 'dark' ? 'bg-cyan-400' : 'bg-cyan-500'}`}></div>
                 صلاحيات الوثائق
               </h4>
               <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -693,7 +713,7 @@ function UsersAdmin() {
                   />
                   <span>الاطلاع على كل الوثائق</span>
                 </label>
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -702,7 +722,7 @@ function UsersAdmin() {
                   />
                   <span>إدارة وثائقه</span>
                 </label>
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -711,7 +731,7 @@ function UsersAdmin() {
                   />
                   <span>حذف وثائقه</span>
                 </label>
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -720,7 +740,7 @@ function UsersAdmin() {
                   />
                   <span>مشاركة وثائقه</span>
                 </label>
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -729,7 +749,7 @@ function UsersAdmin() {
                   />
                   <span>البحث داخل وثائقه</span>
                 </label>
-                <label className="flex items-center gap-2 text-text-secondary hover:text-cyan-400 cursor-pointer transition">
+                <label className={checkboxLabelClass}>
                   <input
                     type="checkbox"
                     className="w-4 h-4"
@@ -740,21 +760,21 @@ function UsersAdmin() {
                 </label>
               </div>
             </div>
-            
-            <div className="flex gap-3 pt-4 border-t border-[rgba(0,188,212,0.12)]">
-              <button className="btn-primary px-8" onClick={saveEdit}>
+
+            <div className={`flex gap-3 pt-4 border-t ${theme === 'dark' ? 'border-[rgba(0,188,212,0.12)]' : 'border-cyan-200'}`}>
+              <button className={`px-8 py-2 rounded-xl transition-all ${theme === 'dark' ? 'btn-primary' : 'bg-cyan-500 text-white hover:bg-cyan-600 shadow-md'}`} onClick={saveEdit}>
                 حفظ التعديلات
               </button>
               <button
-                className="px-6 py-2 rounded-xl border border-[rgba(0,188,212,0.12)] hover:border-cyan-500 text-text-secondary hover:text-cyan-400 transition"
+                className={`px-6 py-2 rounded-xl border transition ${theme === 'dark' ? 'border-[rgba(0,188,212,0.12)] hover:border-cyan-500 text-text-secondary hover:text-cyan-400' : 'border-cyan-200 hover:border-cyan-500 text-slate-600 hover:text-cyan-600'}`}
                 onClick={() => setEditId(null)}
               >
                 إلغاء
               </button>
-              </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </div>
   )
 }

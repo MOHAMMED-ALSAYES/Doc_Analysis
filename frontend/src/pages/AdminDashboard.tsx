@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
+import { useTheme } from '../contexts/ThemeContext'
 
 // أيقونات SVG مخصصة
 const Icons = {
@@ -64,6 +65,7 @@ function StatCard({
   loading?: boolean
   delay?: number
 }) {
+  const { theme } = useTheme()
   const [animated, setAnimated] = useState(false)
   const [displayValue, setDisplayValue] = useState(0)
 
@@ -91,7 +93,8 @@ function StatCard({
     }
   }, [value, animated, loading])
 
-  const colorClasses = {
+  // ألوان للوضع الداكن
+  const darkColorClasses = {
     cyan: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
     green: 'bg-green-500/10 text-green-400 border-green-500/20',
     purple: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
@@ -99,29 +102,49 @@ function StatCard({
     blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
   }
 
+  // ألوان الأيقونات للوضع الفاتح (تدرج سماوي)
+  const lightIconColor = {
+    cyan: 'text-cyan-500',
+    green: 'text-teal-500',
+    purple: 'text-blue-500',
+    orange: 'text-cyan-400',
+    blue: 'text-blue-500'
+  }
+
+  // ألوان القيم للوضع الفاتح
+  const lightValueColor = {
+    cyan: 'text-cyan-600',
+    green: 'text-teal-600',
+    purple: 'text-blue-600',
+    orange: 'text-cyan-600',
+    blue: 'text-blue-600'
+  }
+
   return (
     <div
-      className={`card border transition-all duration-500 hover:scale-105 hover:shadow-lg ${colorClasses[color]} ${animated ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+      className={`relative overflow-hidden rounded-xl border-2 transition-all duration-500 hover:scale-105 ${animated ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} ${theme === 'dark' ? `card ${darkColorClasses[color]}` : 'bg-white border-cyan-200 shadow-lg hover:shadow-xl hover:border-cyan-400'}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
-      <div className="flex items-center justify-between mb-3">
-        <div className={`w-10 h-10 rounded-lg ${colorClasses[color]} flex items-center justify-center`}>
-          {icon}
-        </div>
-        {trend && (
-          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full ${trend.positive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-            {Icons.trending}
-            <span>{trend.positive ? '+' : ''}{trend.value}%</span>
+      <div className="relative p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div className={`w-12 h-12 flex items-center justify-center ${theme === 'dark' ? darkColorClasses[color] : lightIconColor[color]}`}>
+            {icon}
           </div>
-        )}
-      </div>
-      <div className="text-text-secondary text-sm mb-1">{title}</div>
-      <div className={`text-3xl font-bold ${color === 'cyan' ? 'text-cyan-400' : color === 'green' ? 'text-green-400' : color === 'purple' ? 'text-purple-400' : color === 'orange' ? 'text-orange-400' : 'text-blue-400'}`}>
-        {loading ? (
-          <div className="h-9 w-16 bg-bg-tertiary rounded animate-pulse"></div>
-        ) : (
-          typeof value === 'number' ? displayValue.toLocaleString('ar-SA') : value
-        )}
+          {trend && (
+            <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full ${trend.positive ? (theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600') : (theme === 'dark' ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600')}`}>
+              {Icons.trending}
+              <span>{trend.positive ? '+' : ''}{trend.value}%</span>
+            </div>
+          )}
+        </div>
+        <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>{title}</div>
+        <div className={`text-3xl font-bold ${theme === 'dark' ? (color === 'cyan' ? 'text-cyan-400' : color === 'green' ? 'text-green-400' : color === 'purple' ? 'text-purple-400' : color === 'orange' ? 'text-orange-400' : 'text-blue-400') : lightValueColor[color]}`}>
+          {loading ? (
+            <div className={`h-9 w-16 rounded animate-pulse ${theme === 'dark' ? 'bg-bg-tertiary' : 'bg-slate-200'}`}></div>
+          ) : (
+            typeof value === 'number' ? displayValue.toLocaleString('ar-SA') : value
+          )}
+        </div>
       </div>
     </div>
   )
@@ -166,6 +189,7 @@ function AdminCard({
   disabled?: boolean
   delay?: number
 }) {
+  const { theme } = useTheme()
   const [animated, setAnimated] = useState(false)
 
   useEffect(() => {
@@ -175,11 +199,11 @@ function AdminCard({
 
   const content = (
     <div className={`flex items-start justify-between mb-4`}>
-      <div className={`w-14 h-14 rounded-xl ${disabled ? 'bg-gray-500/10' : 'bg-gradient-to-br from-cyan-500/20 to-cyan-600/10'} flex items-center justify-center text-cyan-400`}>
+      <div className={`w-14 h-14 flex items-center justify-center ${disabled ? 'text-slate-400' : (theme === 'dark' ? 'text-cyan-400' : 'text-cyan-500')}`}>
         {icon}
       </div>
       {!disabled && (
-        <div className="text-cyan-400 opacity-0 group-hover:opacity-100 transition-all transform group-hover:-translate-x-1">
+        <div className={`opacity-0 group-hover:opacity-100 transition-all transform group-hover:-translate-x-1 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>
           {Icons.arrow}
         </div>
       )}
@@ -189,14 +213,14 @@ function AdminCard({
   if (disabled) {
     return (
       <div
-        className={`card opacity-50 cursor-not-allowed transition-all duration-500 ${animated ? 'opacity-50 translate-y-0' : 'opacity-0 translate-y-4'}`}
+        className={`relative overflow-hidden rounded-xl opacity-60 cursor-not-allowed transition-all duration-500 p-5 ${theme === 'light' ? 'bg-slate-50 border-2 border-slate-200' : 'card'} ${animated ? 'opacity-60 translate-y-0' : 'opacity-0 translate-y-4'}`}
         style={{ transitionDelay: `${delay}ms` }}
       >
         {content}
-        <div className="text-text-secondary text-sm mb-2">{title}</div>
-        <div className="text-xl font-semibold">{subtitle}</div>
-        <p className="text-text-secondary text-sm mt-2">{description}</p>
-        <div className="mt-3 inline-block px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
+        <div className={`text-sm mb-2 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-400'}`}>{title}</div>
+        <div className={`text-xl font-semibold ${theme === 'dark' ? '' : 'text-slate-500'}`}>{subtitle}</div>
+        <p className={`text-sm mt-2 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-400'}`}>{description}</p>
+        <div className={`mt-3 inline-block px-2 py-1 text-xs rounded-full ${theme === 'dark' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-amber-100 text-amber-600'}`}>
           قريباً
         </div>
       </div>
@@ -206,49 +230,52 @@ function AdminCard({
   return (
     <Link
       to={to}
-      className={`card block hover:shadow-cyan hover:border-cyan-500/30 transition-all duration-500 group hover:scale-[1.02] ${animated ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+      className={`relative overflow-hidden block transition-all duration-500 group hover:scale-[1.02] rounded-xl border-2 ${theme === 'dark' ? 'card hover:shadow-cyan hover:border-cyan-500/30' : 'bg-white border-cyan-200 shadow-lg hover:shadow-xl hover:border-cyan-400'} ${animated ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
-      {content}
-      <div className="text-text-secondary text-sm mb-2">{title}</div>
-      <div className="text-xl font-semibold group-hover:text-cyan-400 transition-colors">
-        {subtitle}
+      <div className="relative p-5">
+        {content}
+        <div className={`text-sm mb-2 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>{title}</div>
+        <div className={`text-xl font-semibold transition-colors ${theme === 'dark' ? 'group-hover:text-cyan-400' : 'text-cyan-700 group-hover:text-cyan-600'}`}>
+          {subtitle}
+        </div>
+        <p className={`text-sm mt-2 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>{description}</p>
       </div>
-      <p className="text-text-secondary text-sm mt-2">{description}</p>
     </Link>
   )
 }
 
 // مكون المستخدمين المتصلين
 function OnlineUsers({ users }: { users: any[] }) {
+  const { theme } = useTheme()
   return (
     <div className="space-y-3">
       {users.length === 0 ? (
-        <div className="text-text-secondary text-center py-4">لا يوجد مستخدمين متصلين</div>
+        <div className={`text-center py-4 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-400'}`}>لا يوجد مستخدمين متصلين</div>
       ) : (
         users.slice(0, 5).map((user, index) => (
           <div
             key={user.id || index}
-            className="flex items-center gap-3 p-3 bg-bg-tertiary/50 rounded-lg hover:bg-bg-tertiary transition-colors"
+            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${theme === 'dark' ? 'bg-bg-tertiary/50 hover:bg-bg-tertiary' : 'bg-slate-50 hover:bg-slate-100'}`}
           >
             <div className="relative">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center text-white font-bold">
                 {user.full_name?.charAt(0) || user.username?.charAt(0) || '?'}
               </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-bg-secondary animate-pulse"></div>
+              <div className={`absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 animate-pulse ${theme === 'dark' ? 'border-bg-secondary' : 'border-white'}`}></div>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-medium truncate">{user.full_name || user.username}</div>
-              <div className="text-text-secondary text-xs">
+              <div className={`font-medium truncate ${theme === 'dark' ? '' : 'text-slate-700'}`}>{user.full_name || user.username}</div>
+              <div className={`text-xs ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>
                 {user.role === 'system_admin' ? 'مدير النظام' : 'موظف'}
               </div>
             </div>
-            <div className="text-green-400 text-xs">متصل</div>
+            <div className={`text-xs ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>متصل</div>
           </div>
         ))
       )}
       {users.length > 5 && (
-        <div className="text-center text-text-secondary text-sm">
+        <div className={`text-center text-sm ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>
           +{users.length - 5} مستخدمين آخرين
         </div>
       )}
@@ -258,6 +285,7 @@ function OnlineUsers({ users }: { users: any[] }) {
 
 // مكون النشاط الأخير
 function RecentActivity({ activities }: { activities: any[] }) {
+  const { theme } = useTheme()
   // ترجمة العمليات إلى العربية
   const translateAction = (action: string, details?: any): string => {
     const translations: { [key: string]: string } = {
@@ -376,19 +404,19 @@ function RecentActivity({ activities }: { activities: any[] }) {
   return (
     <div className="space-y-3">
       {activities.length === 0 ? (
-        <div className="text-text-secondary text-center py-4">لا يوجد نشاط حديث</div>
+        <div className={`text-center py-4 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-400'}`}>لا يوجد نشاط حديث</div>
       ) : (
         activities.slice(0, 5).map((activity, index) => (
           <div
             key={activity.id || index}
-            className="flex items-start gap-3 p-3 bg-bg-tertiary/50 rounded-lg hover:bg-bg-tertiary transition-colors"
+            className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${theme === 'dark' ? 'bg-bg-tertiary/50 hover:bg-bg-tertiary' : 'bg-slate-50 hover:bg-slate-100'}`}
           >
-            <div className={`w-2 h-2 rounded-full mt-2 ${getActionColor(activity.action)}`}></div>
+            <div className={`w-2 h-2 rounded-full mt-2 ${theme === 'dark' ? getActionColor(activity.action) : 'bg-cyan-500'}`}></div>
             <div className="flex-1 min-w-0">
-              <div className={`text-sm font-medium ${getActionTextColor(activity.action)}`}>
+              <div className={`text-sm font-medium ${theme === 'dark' ? getActionTextColor(activity.action) : 'text-slate-700'}`}>
                 {translateAction(activity.action, activity.details)}
               </div>
-              <div className="text-text-secondary text-xs mt-1">
+              <div className={`text-xs mt-1 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>
                 {activity.full_name || activity.username || 'مستخدم'} • {formatDate(activity.timestamp)}
               </div>
             </div>
@@ -400,6 +428,7 @@ function RecentActivity({ activities }: { activities: any[] }) {
 }
 
 function AdminDashboard() {
+  const { theme } = useTheme()
   const [stats, setStats] = useState({
     totalUsers: 0,
     onlineUsers: 0,
@@ -505,29 +534,31 @@ function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* رأس لوحة المدير */}
-      <div className="card bg-gradient-to-r from-bg-secondary to-bg-tertiary border border-cyan-500/20">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent mb-2">
-              لوحة التحكم
-            </h1>
-            <p className="text-text-secondary">
-              مرحباً بك في لوحة إدارة النظام
-              {lastUpdate && (
-                <span className="text-text-secondary/70 mr-2">
-                  • آخر تحديث: {lastUpdate.toLocaleTimeString('ar-SA')}
-                </span>
-              )}
-            </p>
+      <div className={`relative overflow-hidden rounded-xl border-2 ${theme === 'dark' ? 'card bg-gradient-to-r from-bg-secondary to-bg-tertiary border-cyan-500/20' : 'bg-white border-cyan-200 shadow-lg'}`}>
+        <div className="p-6">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent' : 'text-cyan-600'}`}>
+                لوحة التحكم
+              </h1>
+              <p className={theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}>
+                مرحباً بك في لوحة إدارة النظام
+                {lastUpdate && (
+                  <span className={`mr-2 ${theme === 'dark' ? 'text-text-secondary/70' : 'text-slate-400'}`}>
+                    • آخر تحديث: {lastUpdate.toLocaleTimeString('ar-SA')}
+                  </span>
+                )}
+              </p>
+            </div>
+            <button
+              onClick={fetchDashboardData}
+              disabled={refreshing}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all ${refreshing ? 'opacity-50' : ''} ${theme === 'dark' ? 'bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border-transparent' : 'bg-white border-cyan-400 hover:bg-cyan-50 text-cyan-600'}`}
+            >
+              <span className={refreshing ? 'animate-spin' : ''}>{Icons.refresh}</span>
+              تحديث
+            </button>
           </div>
-          <button
-            onClick={fetchDashboardData}
-            disabled={refreshing}
-            className={`flex items-center gap-2 px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 rounded-lg transition-all ${refreshing ? 'opacity-50' : ''}`}
-          >
-            <span className={refreshing ? 'animate-spin' : ''}>{Icons.refresh}</span>
-            تحديث
-          </button>
         </div>
       </div>
 
@@ -544,7 +575,7 @@ function AdminDashboard() {
         <StatCard
           title="المستخدمون المتصلون"
           value={stats.onlineUsers}
-          icon={<span className="text-green-400">{Icons.online}</span>}
+          icon={Icons.online}
           color="green"
           loading={loading}
           delay={100}
@@ -600,70 +631,94 @@ function AdminDashboard() {
       {/* قسم البيانات التفصيلية */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* المستخدمين المتصلين */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-cyan-400">المستخدمون المتصلون</h3>
-            <div className="flex items-center gap-2 text-green-400 text-sm">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              {stats.onlineUsers} متصل
+        <div className={`relative overflow-hidden rounded-xl border-2 ${theme === 'light' ? 'bg-white border-slate-200 shadow-lg' : 'card'}`}>
+          {/* خط علوي ملون */}
+          {theme === 'light' && (
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 via-teal-500 to-cyan-600"></div>
+          )}
+          <div className="relative p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-700'}`}>المستخدمون المتصلون</h3>
+              <div className={`flex items-center gap-2 text-sm ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+                <div className={`w-2 h-2 rounded-full animate-pulse ${theme === 'dark' ? 'bg-green-400' : 'bg-green-500'}`}></div>
+                {stats.onlineUsers} متصل
+              </div>
             </div>
+            <OnlineUsers users={onlineUsersList} />
           </div>
-          <OnlineUsers users={onlineUsersList} />
         </div>
 
         {/* النشاط الأخير */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-cyan-400">النشاط الأخير</h3>
-            <Link to="/admin/activity" className="text-cyan-400 text-sm hover:underline">
-              عرض الكل ←
-            </Link>
+        <div className={`relative overflow-hidden rounded-xl border-2 ${theme === 'light' ? 'bg-white border-slate-200 shadow-lg' : 'card'}`}>
+          {/* خط علوي ملون */}
+          {theme === 'light' && (
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500"></div>
+          )}
+          <div className="relative p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-700'}`}>النشاط الأخير</h3>
+              <Link to="/admin/activity" className={`text-sm hover:underline ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                عرض الكل ←
+              </Link>
+            </div>
+            <RecentActivity activities={recentActivities} />
           </div>
-          <RecentActivity activities={recentActivities} />
         </div>
       </div>
 
       {/* الرسوم البيانية */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* الوثائق حسب النوع */}
-        <div className="card">
-          <h3 className="text-lg font-semibold text-cyan-400 mb-4">الوثائق حسب النوع</h3>
-          <div className="space-y-3">
-            {Object.keys(documentsByType).length === 0 ? (
-              <div className="text-text-secondary text-center py-4">لا توجد بيانات</div>
-            ) : (
-              Object.entries(documentsByType).map(([type, count]) => {
-                const max = Math.max(...Object.values(documentsByType))
-                const percentage = (count / max) * 100
-                return (
-                  <div key={type} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>{type}</span>
-                      <span className="text-cyan-400">{count}</span>
+        <div className={`relative overflow-hidden rounded-xl border-2 ${theme === 'light' ? 'bg-white border-slate-200 shadow-lg' : 'card'}`}>
+          {/* خط علوي ملون */}
+          {theme === 'light' && (
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500"></div>
+          )}
+          <div className="relative p-5">
+            <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-700'}`}>الوثائق حسب النوع</h3>
+            <div className="space-y-3">
+              {Object.keys(documentsByType).length === 0 ? (
+                <div className={`text-center py-4 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-400'}`}>لا توجد بيانات</div>
+              ) : (
+                Object.entries(documentsByType).map(([type, count]) => {
+                  const max = Math.max(...Object.values(documentsByType))
+                  const percentage = (count / max) * 100
+                  return (
+                    <div key={type} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className={theme === 'dark' ? '' : 'text-slate-600'}>{type}</span>
+                        <span className={theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}>{count}</span>
+                      </div>
+                      <div className={`h-2 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-bg-tertiary' : 'bg-slate-100'}`}>
+                        <div
+                          className={`h-full rounded-full transition-all duration-1000 ${theme === 'dark' ? 'bg-gradient-to-r from-cyan-500 to-cyan-400' : 'bg-gradient-to-r from-cyan-500 to-cyan-400'}`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-2 bg-bg-tertiary rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 rounded-full transition-all duration-1000"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                )
-              })
-            )}
+                  )
+                })
+              )}
+            </div>
           </div>
         </div>
 
         {/* الوثائق الشهرية */}
-        <div className="card">
-          <h3 className="text-lg font-semibold text-cyan-400 mb-4">الوثائق خلال الأشهر الأخيرة</h3>
-          {monthlyData.length === 0 ? (
-            <div className="text-text-secondary text-center py-4">لا توجد بيانات</div>
-          ) : (
-            <div className="h-32">
-              <SimpleChart data={monthlyData} height={120} />
-            </div>
+        <div className={`relative overflow-hidden rounded-xl border-2 ${theme === 'light' ? 'bg-white border-slate-200 shadow-lg' : 'card'}`}>
+          {/* خط علوي ملون */}
+          {theme === 'light' && (
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-cyan-500 to-teal-500"></div>
           )}
+          <div className="relative p-5">
+            <h3 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-700'}`}>الوثائق خلال الأشهر الأخيرة</h3>
+            {monthlyData.length === 0 ? (
+              <div className={`text-center py-4 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-400'}`}>لا توجد بيانات</div>
+            ) : (
+              <div className="h-32">
+                <SimpleChart data={monthlyData} height={120} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

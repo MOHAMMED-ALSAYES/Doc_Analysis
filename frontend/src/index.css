@@ -2,22 +2,479 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* ===== متغيرات الوضع الداكن (الافتراضي) ===== */
+:root,
+.dark {
   color-scheme: dark;
+
+  /* ألوان الخلفية */
+  --bg-primary: #0A0A0A;
+  --bg-secondary: #0F1112;
+  --bg-tertiary: #1A1D1E;
+  --bg-card: #0F1112;
+  --bg-card-hover: #1A1D1E;
+
+  /* ألوان النص */
+  --text-primary: #E0F7FA;
+  --text-secondary: #9AA6A6;
+  --text-muted: #6B7280;
+
+  /* ألوان العناصر */
+  --border-color: rgba(0, 188, 212, 0.12);
+  --border-hover: rgba(0, 188, 212, 0.25);
+
+  /* ألوان التمييز */
+  --accent-primary: #00BCD4;
+  --accent-secondary: #00E5FF;
+  --accent-glow: rgba(0, 229, 255, 0.25);
+
+  /* ألوان التأثيرات */
+  --glow-cyan: rgba(0, 188, 212, 0.1);
+  --glow-blue: rgba(59, 130, 246, 0.1);
+  --glow-purple: rgba(139, 92, 246, 0.05);
+  --glow-indigo: rgba(99, 102, 241, 0.05);
+  --glow-teal: rgba(20, 184, 166, 0.08);
+
+  /* الشفافية */
+  --overlay-bg: rgba(10, 10, 10, 0.7);
+  --navbar-bg: rgba(10, 10, 10, 0.7);
+
+  /* ألوان الحالة */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
 }
 
+/* ===== متغيرات الوضع الفاتح ===== */
+.light {
+  color-scheme: light;
+
+  /* ألوان الخلفية - أبيض نقي للراحة */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #FAFBFC;
+  --bg-tertiary: #F3F4F6;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F9FAFB;
+
+  /* ألوان النص - تباين عالي للقراءة */
+  --text-primary: #1F2937;
+  --text-secondary: #4B5563;
+  --text-muted: #6B7280;
+
+  /* ألوان العناصر */
+  --border-color: #E5E7EB;
+  --border-hover: #D1D5DB;
+
+  /* ألوان التمييز - سيان داكن للوضوح */
+  --accent-primary: #0E7490;
+  --accent-secondary: #0891B2;
+  --accent-glow: rgba(14, 116, 144, 0.15);
+
+  /* ألوان التأثيرات - خفيفة جداً */
+  --glow-cyan: rgba(14, 116, 144, 0.05);
+  --glow-blue: rgba(59, 130, 246, 0.05);
+  --glow-purple: rgba(139, 92, 246, 0.03);
+  --glow-indigo: rgba(99, 102, 241, 0.03);
+  --glow-teal: rgba(20, 184, 166, 0.04);
+
+  /* الشفافية */
+  --overlay-bg: rgba(255, 255, 255, 0.95);
+  --navbar-bg: rgba(255, 255, 255, 0.98);
+
+  /* ألوان الحالة */
+  --success: #059669;
+  --warning: #D97706;
+  --error: #DC2626;
+  --info: #2563EB;
+
+  /* ظلال للوضع الفاتح */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* ===== التنسيقات الأساسية ===== */
 body {
-  background-color: #0A0A0A;
-  color: #E0F7FA;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* ===== الأزرار ===== */
 .btn-primary {
-  @apply bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-2 rounded-xl shadow-cyan transition;
+  @apply font-medium px-4 py-2 rounded-xl transition-all duration-300;
+  background-color: var(--accent-primary);
+  color: white;
+  box-shadow: 0 0 10px var(--accent-glow);
 }
 
+.btn-primary:hover {
+  background-color: var(--accent-secondary);
+  box-shadow: 0 0 20px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.dark .btn-primary {
+  color: #000;
+}
+
+/* ===== البطاقات ===== */
 .card {
-  @apply bg-base-800 border border-[rgba(0,188,212,0.12)] rounded-xl p-4 shadow;
+  @apply rounded-xl p-4 transition-all duration-300;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
 }
 
+.card:hover {
+  border-color: var(--border-hover);
+  background-color: var(--bg-card-hover);
+}
 
+/* ===== النصوص ===== */
+.text-primary {
+  color: var(--text-primary) !important;
+}
 
+.text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+/* ===== الخلفيات ===== */
+.bg-theme-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-theme-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-theme-card {
+  background-color: var(--bg-card);
+}
+
+/* ===== الحدود ===== */
+.border-theme {
+  border-color: var(--border-color);
+}
+
+/* ===== شريط التنقل ===== */
+.navbar-theme {
+  background-color: var(--navbar-bg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* ===== زر تبديل الوضع ===== */
+.theme-toggle {
+  @apply p-2 rounded-xl transition-all duration-300 cursor-pointer;
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.theme-toggle:hover {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* ===== المدخلات ===== */
+.input-theme {
+  @apply rounded-xl px-4 py-2 transition-all duration-300;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.input-theme:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.input-theme::placeholder {
+  color: var(--text-muted);
+}
+
+/* ===== الجداول ===== */
+.table-theme {
+  @apply w-full;
+}
+
+.table-theme th {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-theme td {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-theme tr:hover td {
+  background-color: var(--bg-card-hover);
+}
+
+/* ===== الرسوم المتحركة ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* ===== تأثيرات الخلفية ===== */
+.bg-effect-cyan {
+  background-color: var(--glow-cyan);
+}
+
+.bg-effect-blue {
+  background-color: var(--glow-blue);
+}
+
+.bg-effect-purple {
+  background-color: var(--glow-purple);
+}
+
+/* ===== Scrollbar تخصيص ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-secondary);
+}
+
+/* ===== تعديلات الوضع الفاتح ===== */
+
+/* البطاقات في الوضع الفاتح */
+.light .card {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.light .card:hover {
+  border-color: #D1D5DB;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* النصوص في الوضع الفاتح */
+.light .text-text-secondary {
+  color: #4B5563 !important;
+}
+
+.light .text-white {
+  color: #1F2937 !important;
+}
+
+/* ألوان التمييز في الوضع الفاتح */
+.light .text-cyan-400,
+.light .text-cyan-300 {
+  color: #0E7490 !important;
+}
+
+.light .text-blue-400 {
+  color: #2563EB !important;
+}
+
+.light .text-green-400 {
+  color: #059669 !important;
+}
+
+.light .text-purple-400 {
+  color: #7C3AED !important;
+}
+
+.light .text-orange-400 {
+  color: #D97706 !important;
+}
+
+.light .text-teal-400 {
+  color: #0D9488 !important;
+}
+
+.light .text-yellow-400 {
+  color: #CA8A04 !important;
+}
+
+.light .text-red-400 {
+  color: #DC2626 !important;
+}
+
+/* خلفيات العناصر في الوضع الفاتح */
+.light .bg-base-900\/50,
+.light .bg-base-900,
+.light .bg-bg-tertiary\/50,
+.light .bg-bg-tertiary {
+  background-color: #F9FAFB !important;
+}
+
+.light .bg-base-800 {
+  background-color: #F3F4F6 !important;
+}
+
+/* الحدود في الوضع الفاتح */
+.light .border-cyan-500\/30,
+.light .border-cyan-500\/20,
+.light .border-\[rgba\(0\,188\,212\,0\.1\)\],
+.light .border-\[rgba\(0\,188\,212\,0\.12\)\] {
+  border-color: #E5E7EB !important;
+}
+
+/* الأيقونات الملونة في الوضع الفاتح */
+.light .bg-cyan-500\/10,
+.light .bg-cyan-500\/20 {
+  background-color: rgba(14, 116, 144, 0.1) !important;
+}
+
+.light .bg-blue-500\/10,
+.light .bg-blue-500\/20 {
+  background-color: rgba(37, 99, 235, 0.1) !important;
+}
+
+.light .bg-green-500\/10,
+.light .bg-green-500\/20 {
+  background-color: rgba(5, 150, 105, 0.1) !important;
+}
+
+.light .bg-purple-500\/10,
+.light .bg-purple-500\/20 {
+  background-color: rgba(124, 58, 237, 0.1) !important;
+}
+
+.light .bg-orange-500\/10,
+.light .bg-orange-500\/20 {
+  background-color: rgba(217, 119, 6, 0.1) !important;
+}
+
+.light .bg-teal-500\/8,
+.light .bg-teal-500\/20 {
+  background-color: rgba(13, 148, 136, 0.1) !important;
+}
+
+/* تحسين التدرجات في الوضع الفاتح */
+.light .bg-gradient-to-r.from-bg-secondary.to-bg-tertiary {
+  background: linear-gradient(to right, #FFFFFF, #F3F4F6) !important;
+}
+
+.light .bg-gradient-to-r.from-cyan-400.to-cyan-300 {
+  background: linear-gradient(to right, #0E7490, #0891B2) !important;
+}
+
+/* شريط التنقل في الوضع الفاتح */
+.light .navbar-theme {
+  background: linear-gradient(135deg, #0891B2 0%, #06B6D4 50%, #22D3EE 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(8, 145, 178, 0.3);
+}
+
+/* زر تبديل الوضع في الوضع الفاتح */
+.light .theme-toggle {
+  background-color: #F3F4F6;
+  color: #4B5563;
+  border: 1px solid #E5E7EB;
+}
+
+.light .theme-toggle:hover {
+  color: #0E7490;
+  border-color: #0E7490;
+}
+
+/* الأزرار في الوضع الفاتح */
+.light .btn-primary {
+  background-color: #0E7490;
+  color: #FFFFFF;
+}
+
+.light .btn-primary:hover {
+  background-color: #0891B2;
+}
+
+/* حقول الإدخال في الوضع الفاتح */
+.light input,
+.light select,
+.light textarea {
+  background-color: #FFFFFF !important;
+  color: #1F2937 !important;
+  border-color: #E5E7EB !important;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #9CA3AF !important;
+}
+
+.light input:focus,
+.light select:focus,
+.light textarea:focus {
+  border-color: #0E7490 !important;
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1) !important;
+}
+
+/* الجداول في الوضع الفاتح */
+.light table {
+  background-color: #FFFFFF;
+}
+
+.light th {
+  background-color: #F9FAFB !important;
+  color: #374151 !important;
+  border-color: #E5E7EB !important;
+}
+
+.light td {
+  background-color: #FFFFFF !important;
+  color: #1F2937 !important;
+  border-color: #E5E7EB !important;
+}
+
+.light tr:hover td {
+  background-color: #F9FAFB !important;
+}
+
+/* الروابط في الوضع الفاتح */
+.light a {
+  color: #0E7490;
+}
+
+.light a:hover {
+  color: #0891B2;
+}
+
+/* التنبيهات والشارات في الوضع الفاتح */
+.light .bg-green-500\/20 {
+  background-color: rgba(5, 150, 105, 0.15) !important;
+}
+
+.light .bg-red-500\/20 {
+  background-color: rgba(220, 38, 38, 0.15) !important;
+}
+
+.light .bg-yellow-500\/20 {
+  background-color: rgba(202, 138, 4, 0.15) !important;
+}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../lib/api'
+import { useTheme } from '../contexts/ThemeContext'
 
 type Doc = {
   id: number
@@ -11,20 +12,26 @@ type Doc = {
   ocr_accuracy?: number
   uploader_id?: number
   created_at?: string
+  updated_at?: string
+  source_type?: string
+  original_file_path?: string
+  content_text?: string
+  suggested_title?: string
 }
 
 function Documents() {
+  const { theme } = useTheme()
   const [docs, setDocs] = useState<Doc[]>([])
   const [selectedDoc, setSelectedDoc] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
-  
+
   // فلاتر
   const [filterType, setFilterType] = useState('')
   const [filterDirection, setFilterDirection] = useState('')
   const [filterDateFrom, setFilterDateFrom] = useState('')
   const [filterDateTo, setFilterDateTo] = useState('')
-  
+
   // التعديل
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
@@ -32,7 +39,7 @@ function Documents() {
   const [editDirection, setEditDirection] = useState('')
   const [showPrintPreview, setShowPrintPreview] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const toastTimer = useRef<NodeJS.Timeout | null>(null)
+  const toastTimer = useRef<any>(null)
   const [extractingStudents, setExtractingStudents] = useState(false)
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -45,7 +52,7 @@ function Documents() {
 
   const extractStudents = async () => {
     if (!selectedDoc?.id) return
-    
+
     setExtractingStudents(true)
     try {
       const res = await api.post(`/documents/${selectedDoc.id}/extract-students`)
@@ -80,13 +87,13 @@ function Documents() {
           date_to: filterDateTo || undefined,
         },
       })
-        setDocs(res.data)
+      setDocs(res.data)
       setMsg('')
     } catch (e: any) {
       setMsg(e?.response?.data?.detail || 'فشل جلب الوثائق')
-      } finally {
-        setLoading(false)
-      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -361,15 +368,15 @@ function Documents() {
     options: FormatOptions = { stripDiacritics: true }
   ): string => {
     if (!text) return 'لا يوجد نص مستخرج'
-    
+
     let cleaned = text
       .replace(/\r\n/g, '\n')
       .replace(/\r/g, '\n')
       .replace(/[ \t]+/g, ' ')
       .replace(/\n{3,}/g, '\n\n')
-    
-    let lines = cleaned.split('\n').map(line => line.trim()).filter(line => line.length > 0)
-    
+
+    let lines = cleaned.split('\n').map(line => line.trim()).filter((line: string) => line.length > 0)
+
     const merged: string[] = []
     for (let i = 0; i < lines.length; i++) {
       if (i === 0) {
@@ -380,27 +387,27 @@ function Documents() {
         merged.push(lines[i])
       }
     }
-    
+
     cleaned = merged.join('\n')
-    
+
     cleaned = cleaned
       .replace(/([.!?؛،:])([^\s])/g, '$1 $2')
       .replace(/([.!?])\s+([A-Zأ-ي])/g, '$1\n\n$2')
-    
+
     cleaned = cleaned.trim().replace(/\n{3,}/g, '\n\n')
-    
+
     // إضافة مسافات بين الأرقام والحروف إذا كانت ملاصقة
     cleaned = cleaned
       .replace(/(\d)(?=[^\s\d])/g, '$1 ')
       .replace(/([^\s\d])(?=\d)/g, '$1 ')
-    
+
     // معالجة حالات مثل "نوالالرجوي" (تكرار "ال" المتتالية)
     cleaned = cleaned.replace(/ال(?=ال[\u0600-\u06FF])/g, 'ال ')
-    
+
     if (options.stripDiacritics !== false) {
       cleaned = stripArabicDiacritics(cleaned)
     }
-    
+
     return cleaned || 'لا يوجد نص مستخرج'
   }
 
@@ -416,22 +423,22 @@ function Documents() {
   return (
     <div className="space-y-6">
       {/* رأس الصفحة */}
-      <div className="card">
-        <h1 className="text-3xl font-bold text-cyan-400 mb-2">عرض الوثائق</h1>
-        <p className="text-text-secondary">
+      <div className={`rounded-xl p-6 ${theme === 'dark' ? 'card' : 'bg-gradient-to-r from-cyan-500 to-cyan-600 shadow-lg'}`}>
+        <h1 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-cyan-400' : 'text-white'}`}>عرض الوثائق</h1>
+        <p className={theme === 'dark' ? 'text-text-secondary' : 'text-cyan-100'}>
           عرض وإدارة جميع الوثائق المرفوعة
         </p>
       </div>
 
       {/* الفلاتر */}
-      <div className="card">
-        <h2 className="text-lg font-semibold text-cyan-400 mb-3">فلترة الوثائق</h2>
+      <div className={`rounded-xl p-6 border-2 ${theme === 'dark' ? 'card' : 'bg-white border-cyan-200 shadow-lg'}`}>
+        <h2 className={`text-lg font-semibold mb-3 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>فلترة الوثائق</h2>
         <div className="space-y-3">
           <div className="grid md:grid-cols-5 gap-3">
             <div>
-              <label className="block text-xs text-text-secondary mb-1">نوع الوثيقة</label>
+              <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>نوع الوثيقة</label>
               <select
-                className="w-full px-3 py-2 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition text-sm"
+                className={`w-full px-3 py-2 rounded-xl border focus:outline-none transition text-sm ${theme === 'dark' ? 'bg-base-900 border-[rgba(0,188,212,0.12)] focus:border-cyan-500' : 'bg-slate-50 border-slate-300 focus:border-cyan-500 text-slate-800'}`}
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
               >
@@ -444,9 +451,9 @@ function Documents() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-text-secondary mb-1">الاتجاه</label>
+              <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>الاتجاه</label>
               <select
-                className="w-full px-3 py-2 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition text-sm"
+                className={`w-full px-3 py-2 rounded-xl border focus:outline-none transition text-sm ${theme === 'dark' ? 'bg-base-900 border-[rgba(0,188,212,0.12)] focus:border-cyan-500' : 'bg-slate-50 border-slate-300 focus:border-cyan-500 text-slate-800'}`}
                 value={filterDirection}
                 onChange={(e) => setFilterDirection(e.target.value)}
               >
@@ -456,19 +463,19 @@ function Documents() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-text-secondary mb-1">من تاريخ</label>
+              <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>من تاريخ</label>
               <input
                 type="date"
-                className="w-full px-3 py-2 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition text-sm"
+                className={`w-full px-3 py-2 rounded-xl border focus:outline-none transition text-sm ${theme === 'dark' ? 'bg-base-900 border-[rgba(0,188,212,0.12)] focus:border-cyan-500' : 'bg-slate-50 border-slate-300 focus:border-cyan-500 text-slate-800'}`}
                 value={filterDateFrom}
                 onChange={(e) => setFilterDateFrom(e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-xs text-text-secondary mb-1">إلى تاريخ</label>
+              <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>إلى تاريخ</label>
               <input
                 type="date"
-                className="w-full px-3 py-2 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition text-sm"
+                className={`w-full px-3 py-2 rounded-xl border focus:outline-none transition text-sm ${theme === 'dark' ? 'bg-base-900 border-[rgba(0,188,212,0.12)] focus:border-cyan-500' : 'bg-slate-50 border-slate-300 focus:border-cyan-500 text-slate-800'}`}
                 value={filterDateTo}
                 onChange={(e) => setFilterDateTo(e.target.value)}
               />
@@ -482,7 +489,7 @@ function Documents() {
                 {loading ? 'جارٍ البحث...' : 'بحث'}
               </button>
               <button
-                className="px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-colors"
+                className={`px-4 py-2 rounded-xl border transition-colors ${theme === 'dark' ? 'border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50' : 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:border-red-300'}`}
                 onClick={clearFilters}
                 title="مسح الفلاتر"
               >
@@ -499,14 +506,14 @@ function Documents() {
       </div>
 
       {/* جدول الوثائق */}
-    <div className="card">
+      <div className="card">
         <h2 className="text-lg font-semibold text-cyan-400 mb-4">
           الوثائق ({docs.length})
         </h2>
         <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="text-text-secondary border-b border-[rgba(0,188,212,0.12)]">
+              <tr className={`border-b ${theme === 'dark' ? 'text-text-secondary border-[rgba(0,188,212,0.12)]' : 'text-slate-600 border-slate-200'}`}>
                 <th className="text-right py-3 px-2">رقم الوثيقة</th>
                 <th className="text-right py-3 px-2">العنوان</th>
                 <th className="text-right py-3 px-2">التصنيف</th>
@@ -515,9 +522,9 @@ function Documents() {
                 <th className="text-right py-3 px-2">الحالة</th>
                 <th className="text-right py-3 px-2">التاريخ</th>
                 <th className="text-left py-3 px-2">الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
+              </tr>
+            </thead>
+            <tbody>
               {docs.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-8 text-center text-text-secondary">
@@ -528,7 +535,7 @@ function Documents() {
                 docs.map((d) => (
                   <tr
                     key={d.id}
-                    className="border-b border-[rgba(0,188,212,0.12)] hover:bg-base-900/50 transition"
+                    className={`border-b transition ${theme === 'dark' ? 'border-[rgba(0,188,212,0.12)] hover:bg-base-900/50' : 'border-slate-100 hover:bg-slate-50'}`}
                   >
                     <td className="py-3 px-2">
                       <span className="font-mono text-cyan-400">{d.document_number}</span>
@@ -545,11 +552,10 @@ function Documents() {
                     </td>
                     <td className="py-3 px-2">
                       {d.direction ? (
-                        <span className={`inline-block px-2 py-1 rounded-lg text-xs ${
-                          d.direction === 'صادر'
-                            ? 'bg-blue-500/10 text-blue-400'
-                            : 'bg-green-500/10 text-green-400'
-                        }`}>
+                        <span className={`inline-block px-2 py-1 rounded-lg text-xs ${d.direction === 'صادر'
+                          ? 'bg-blue-500/10 text-blue-400'
+                          : 'bg-green-500/10 text-green-400'
+                          }`}>
                           {d.direction}
                         </span>
                       ) : (
@@ -558,13 +564,12 @@ function Documents() {
                     </td>
                     <td className="py-3 px-2">
                       {d.ocr_accuracy ? (
-                        <span className={`text-xs ${
-                          d.ocr_accuracy >= 90
-                            ? 'text-green-400'
-                            : d.ocr_accuracy >= 70
+                        <span className={`text-xs ${d.ocr_accuracy >= 90
+                          ? 'text-green-400'
+                          : d.ocr_accuracy >= 70
                             ? 'text-yellow-400'
                             : 'text-red-400'
-                        }`}>
+                          }`}>
                           {d.ocr_accuracy}%
                         </span>
                       ) : (
@@ -583,19 +588,19 @@ function Documents() {
                         عرض
                       </button>
                     </td>
-              </tr>
+                  </tr>
                 ))
               )}
-          </tbody>
-        </table>
-      </div>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* عرض تفاصيل الوثيقة */}
       {selectedDoc && (
-        <div className="card">
+        <div className={`rounded-xl p-6 border-2 ${theme === 'dark' ? 'card' : 'bg-white border-cyan-200 shadow-lg'}`}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-cyan-400">
+            <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-700'}`}>
               تفاصيل الوثيقة: {selectedDoc.document_number}
             </h2>
             <button
@@ -637,11 +642,10 @@ function Documents() {
                   <div className="grid grid-cols-2 py-2 border-b border-[rgba(0,188,212,0.06)]">
                     <span className="text-text-secondary">الاتجاه:</span>
                     {selectedDoc.direction ? (
-                      <span className={`inline-block px-2 py-1 rounded-lg text-xs ${
-                        selectedDoc.direction === 'صادر'
-                          ? 'bg-blue-500/10 text-blue-400'
-                          : 'bg-green-500/10 text-green-400'
-                      }`}>
+                      <span className={`inline-block px-2 py-1 rounded-lg text-xs ${selectedDoc.direction === 'صادر'
+                        ? 'bg-blue-500/10 text-blue-400'
+                        : 'bg-green-500/10 text-green-400'
+                        }`}>
                         {selectedDoc.direction}
                       </span>
                     ) : (
@@ -651,24 +655,22 @@ function Documents() {
                   <div className="grid grid-cols-2 py-2 border-b border-[rgba(0,188,212,0.06)]">
                     <span className="text-text-secondary">دقة OCR:</span>
                     <div>
-                      <span className={`font-semibold ${
-                        selectedDoc.ocr_accuracy >= 90
-                          ? 'text-green-400'
-                          : selectedDoc.ocr_accuracy >= 70
+                      <span className={`font-semibold ${selectedDoc.ocr_accuracy >= 90
+                        ? 'text-green-400'
+                        : selectedDoc.ocr_accuracy >= 70
                           ? 'text-yellow-400'
                           : 'text-red-400'
-                      }`}>
+                        }`}>
                         {selectedDoc.ocr_accuracy || 0}%
                       </span>
                       <div className="w-full bg-base-900 h-1 rounded mt-1">
                         <div
-                          className={`h-1 rounded ${
-                            selectedDoc.ocr_accuracy >= 90
-                              ? 'bg-green-400'
-                              : selectedDoc.ocr_accuracy >= 70
+                          className={`h-1 rounded ${selectedDoc.ocr_accuracy >= 90
+                            ? 'bg-green-400'
+                            : selectedDoc.ocr_accuracy >= 70
                               ? 'bg-yellow-400'
                               : 'bg-red-400'
-                          }`}
+                            }`}
                           style={{ width: `${selectedDoc.ocr_accuracy || 0}%` }}
                         />
                       </div>
@@ -689,20 +691,20 @@ function Documents() {
                     <span className="text-text-secondary">{formatDate(selectedDoc.updated_at)}</span>
                   </div>
                 </div>
-              {selectedDoc.original_file_path && (
-                <div className="mt-4 p-3 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.15)]">
-                  <div className="text-xs text-text-secondary mb-2">مسار الملف الأصلي</div>
-                  <div className="text-xs font-mono text-cyan-400 break-all bg-base-900/70 px-3 py-2 rounded-lg border border-[rgba(0,188,212,0.12)]" dir="ltr" style={{ textAlign: 'left' }}>
-                    {getDisplayPath(selectedDoc.original_file_path)}
+                {selectedDoc.original_file_path && (
+                  <div className="mt-4 p-3 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.15)]">
+                    <div className="text-xs text-text-secondary mb-2">مسار الملف الأصلي</div>
+                    <div className="text-xs font-mono text-cyan-400 break-all bg-base-900/70 px-3 py-2 rounded-lg border border-[rgba(0,188,212,0.12)]" dir="ltr" style={{ textAlign: 'left' }}>
+                      {getDisplayPath(selectedDoc.original_file_path)}
+                    </div>
+                    <button
+                      className="mt-3 text-sm px-3 py-2 rounded-xl border border-[rgba(0,188,212,0.15)] hover:border-cyan-500 text-text-secondary hover:text-cyan-400 transition"
+                      onClick={copyOriginalPath}
+                    >
+                      نسخ المسار
+                    </button>
                   </div>
-                  <button
-                    className="mt-3 text-sm px-3 py-2 rounded-xl border border-[rgba(0,188,212,0.15)] hover:border-cyan-500 text-text-secondary hover:text-cyan-400 transition"
-                    onClick={copyOriginalPath}
-                  >
-                    نسخ المسار
-                  </button>
-                </div>
-              )}
+                )}
               </div>
 
               {/* أزرار الإجراءات */}
@@ -734,17 +736,17 @@ function Documents() {
                 ) : (
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs text-text-secondary mb-1">العنوان</label>
+                      <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>العنوان</label>
                       <input
-                        className="w-full px-3 py-2 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition text-sm"
+                        className={`w-full px-3 py-2 rounded-xl border focus:outline-none transition text-sm ${theme === 'dark' ? 'bg-base-900 border-[rgba(0,188,212,0.12)] focus:border-cyan-500' : 'bg-slate-50 border-slate-300 focus:border-cyan-500 text-slate-800'}`}
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-text-secondary mb-1">التصنيف</label>
+                      <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>التصنيف</label>
                       <select
-                        className="w-full px-3 py-2 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition text-sm"
+                        className={`w-full px-3 py-2 rounded-xl border focus:outline-none transition text-sm ${theme === 'dark' ? 'bg-base-900 border-[rgba(0,188,212,0.12)] focus:border-cyan-500' : 'bg-slate-50 border-slate-300 focus:border-cyan-500 text-slate-800'}`}
                         value={editClassification}
                         onChange={(e) => setEditClassification(e.target.value)}
                       >
@@ -757,9 +759,9 @@ function Documents() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs text-text-secondary mb-1">الاتجاه</label>
+                      <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>الاتجاه</label>
                       <select
-                        className="w-full px-3 py-2 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition text-sm"
+                        className={`w-full px-3 py-2 rounded-xl border focus:outline-none transition text-sm ${theme === 'dark' ? 'bg-base-900 border-[rgba(0,188,212,0.12)] focus:border-cyan-500' : 'bg-slate-50 border-slate-300 focus:border-cyan-500 text-slate-800'}`}
                         value={editDirection}
                         onChange={(e) => setEditDirection(e.target.value)}
                       >
@@ -798,7 +800,7 @@ function Documents() {
                 النص المستخرج (OCR)
               </h3>
               <div className="p-4 rounded-xl bg-base-900 max-h-96 overflow-y-auto border border-[rgba(0,188,212,0.12)]">
-                <div 
+                <div
                   className="text-sm text-text-secondary whitespace-pre-wrap font-sans leading-relaxed"
                   style={{
                     fontFamily: "'Segoe UI', 'Tajawal', 'Arial', sans-serif",
@@ -813,9 +815,9 @@ function Documents() {
                 </div>
               </div>
               {selectedDoc.content_text && (
-                <div className="mt-2 text-xs text-text-secondary text-center">
-                  إجمالي الأحرف: {selectedDoc.content_text.length.toLocaleString('ar')} • 
-                  إجمالي الكلمات: {selectedDoc.content_text.split(/\s+/).filter(w => w.length > 0).length.toLocaleString('ar')}
+                <div className={`mt-2 text-xs text-center ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>
+                  إجمالي الأحرف: {selectedDoc.content_text.length.toLocaleString('ar')} •
+                  إجمالي الكلمات: {selectedDoc.content_text.split(/\s+/).filter((w: string) => w.length > 0).length.toLocaleString('ar')}
                 </div>
               )}
             </div>
@@ -894,23 +896,20 @@ function Documents() {
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-xl">
           <div
-            className={`rounded-2xl border px-5 py-4 shadow-2xl backdrop-blur bg-gradient-to-r ${
-              toast.type === 'success'
-                ? 'from-emerald-500/15 to-emerald-400/10 border-emerald-400/30'
-                : 'from-rose-500/15 to-rose-400/10 border-rose-400/30'
-            }`}
+            className={`rounded-2xl border px-5 py-4 shadow-2xl backdrop-blur bg-gradient-to-r ${toast.type === 'success'
+              ? 'from-emerald-500/15 to-emerald-400/10 border-emerald-400/30'
+              : 'from-rose-500/15 to-rose-400/10 border-rose-400/30'
+              }`}
           >
             <div className="flex items-center gap-3">
               <div
-                className={`w-3 h-3 rounded-full ${
-                  toast.type === 'success' ? 'bg-emerald-300' : 'bg-rose-300'
-                } animate-pulse`}
+                className={`w-3 h-3 rounded-full ${toast.type === 'success' ? 'bg-emerald-300' : 'bg-rose-300'
+                  } animate-pulse`}
               ></div>
               <div>
                 <p
-                  className={`text-sm font-semibold ${
-                    toast.type === 'success' ? 'text-emerald-200' : 'text-rose-200'
-                  }`}
+                  className={`text-sm font-semibold ${toast.type === 'success' ? 'text-emerald-200' : 'text-rose-200'
+                    }`}
                 >
                   {toast.type === 'success' ? 'تم التنفيذ بنجاح' : 'حدث خطأ'}
                 </p>

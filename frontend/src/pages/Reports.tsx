@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../lib/api'
+import { useTheme } from '../contexts/ThemeContext'
 import {
   LineChart,
   Line,
@@ -44,18 +45,19 @@ interface User {
 }
 
 function Reports() {
+  const { theme } = useTheme()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedPeriod, setSelectedPeriod] = useState('30')
-  
+
   // Filter states
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [users, setUsers] = useState<User[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
-  
+
   // Export modal states
   const [showExportModal, setShowExportModal] = useState(false)
   const [exportType, setExportType] = useState<'pdf' | 'excel' | null>(null)
@@ -109,7 +111,7 @@ function Reports() {
       if (dateFrom) params.date_from = dateFrom
       if (dateTo) params.date_to = dateTo
       if (selectedUserId && isAdmin) params.user_id = selectedUserId
-      
+
       const res = await api.get('/reports/dashboard', { params })
       setStats(res.data)
     } catch (e: any) {
@@ -150,7 +152,7 @@ function Reports() {
 
     const fromStr = fromDate.toISOString().split('T')[0]
     const toStr = today.toISOString().split('T')[0]
-    
+
     return { from: fromStr, to: toStr }
   }
 
@@ -176,11 +178,11 @@ function Reports() {
           params.date_from = exportDateFrom
           params.date_to = exportDateTo
         }
-        
+
         const res = await api.get('/reports/login-activity', { params })
-        
+
         setShowExportModal(false)
-        
+
         if (exportType === 'pdf') {
           exportLoginActivityPDF(res.data, params.date_from || '', params.date_to || '')
         } else {
@@ -202,7 +204,7 @@ function Reports() {
         }
 
         let params: any = { activity_type: userActivityType }
-        
+
         if (exportPeriod === 'day') {
           // يوم محدد
           params.date_from = exportDateFrom
@@ -216,11 +218,11 @@ function Reports() {
           params.date_from = exportDateFrom
           params.date_to = exportDateTo
         }
-        
+
         const res = await api.get('/reports/users-activity', { params })
-        
+
         setShowExportModal(false)
-        
+
         if (exportType === 'pdf') {
           exportUsersActivityPDF(res.data, params.date_from || '', params.date_to || '')
         } else {
@@ -254,11 +256,11 @@ function Reports() {
           params.date_from = exportDateFrom
           params.date_to = exportDateTo
         }
-        
+
         const res = await api.get('/reports/user-activity', { params })
-        
+
         setShowExportModal(false)
-        
+
         // تصفية البيانات حسب نوع النشاط المحدد
         let filteredData = { ...res.data }
         if (userActivityType === 'login') {
@@ -266,7 +268,7 @@ function Reports() {
         } else if (userActivityType === 'documents') {
           filteredData.activities = { count: 0, items: [] }
         }
-        
+
         if (exportType === 'pdf') {
           exportUserActivityPDF(filteredData, params.date_from || '', params.date_to || '', userActivityType)
         } else {
@@ -321,12 +323,12 @@ function Reports() {
       if (finalDateFrom) params.date_from = finalDateFrom
       if (finalDateTo) params.date_to = finalDateTo
       if (finalUserId && isAdmin) params.user_id = finalUserId
-      
+
       const [statsRes, documentsRes] = await Promise.all([
         api.get('/reports/dashboard', { params }),
         api.get('/reports/documents-list', { params })
       ])
-      
+
       const includeDashboard = isAdmin && reportType === 'all_documents'
       if (exportType === 'pdf') {
         exportToPDFWithFilters(statsRes.data, documentsRes.data, finalDateFrom, finalDateTo, finalUserId, reportType, includeDashboard)
@@ -353,9 +355,9 @@ function Reports() {
     }
 
     // التاريخ بالإنجليزية مع الشهر بالرقم
-    const generatedDate = new Date().toLocaleString('en-US', { 
-      year: 'numeric', 
-      month: '2-digit', 
+    const generatedDate = new Date().toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
@@ -623,23 +625,23 @@ function Reports() {
           </thead>
           <tbody>
             ${documentsData.documents.map((doc: any, idx: number) => {
-              const formatDate = (timestamp?: string) => {
-                if (!timestamp) return '—'
-                try {
-                  const date = new Date(timestamp)
-                  return date.toLocaleString('en-US', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true,
-                  })
-                } catch {
-                  return timestamp
-                }
-              }
-              return `
+      const formatDate = (timestamp?: string) => {
+        if (!timestamp) return '—'
+        try {
+          const date = new Date(timestamp)
+          return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          })
+        } catch {
+          return timestamp
+        }
+      }
+      return `
               <tr>
                 <td>${idx + 1}</td>
                 <td>${doc.document_number || '-'}</td>
@@ -650,7 +652,7 @@ function Reports() {
                 <td>${doc.ai_classification}</td>
               </tr>
             `
-            }).join('')}
+    }).join('')}
           </tbody>
         </table>
         ` : ''}
@@ -668,10 +670,10 @@ function Reports() {
       alert('فشل فتح نافذة الطباعة. تأكد من السماح بالنوافذ المنبثقة.')
       return
     }
-    
+
     printWindow.document.write(pdfContent)
     printWindow.document.close()
-    
+
     // Wait for content to load, then trigger print/save as PDF
     printWindow.onload = () => {
       setTimeout(() => {
@@ -681,7 +683,7 @@ function Reports() {
         // Note: User can choose "Save as PDF" in the print dialog
       }, 500)
     }
-    
+
     // Fallback if onload doesn't fire
     setTimeout(() => {
       if (printWindow && !printWindow.closed) {
@@ -703,9 +705,9 @@ function Reports() {
     if (!exportStats) return
 
     // التاريخ بالإنجليزية مع الشهر بالرقم
-    const generatedDate = new Date().toLocaleString('en-US', { 
-      year: 'numeric', 
-      month: '2-digit', 
+    const generatedDate = new Date().toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
@@ -715,7 +717,7 @@ function Reports() {
 
     // Create workbook
     const workbook = new ExcelJS.Workbook()
-    
+
     // Colors
     const headerColor = '00BCD4'
     const headerTextColor = 'FFFFFF'
@@ -727,14 +729,14 @@ function Reports() {
 
     // Sheet 1: Summary / الملخص
     const summarySheet = includeDashboardSheets ? workbook.addWorksheet('Summary') : null as any
-    
+
     // Header
     if (includeDashboardSheets) {
       summarySheet.mergeCells('A1:B1')
       summarySheet.getCell('A1').value = ' System Report / تقرير النظام'
       summarySheet.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FF' + headerColor } }
       summarySheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' }
-      
+
       summarySheet.mergeCells('A2:B2')
       let dateRowText = `Generated: ${generatedDate}`
       if (dateFrom || dateTo || userId) {
@@ -750,9 +752,9 @@ function Reports() {
       summarySheet.getCell('A2').value = dateRowText
       summarySheet.getCell('A2').font = { size: 11 }
       summarySheet.getCell('A2').alignment = { horizontal: 'center' }
-      
+
       summarySheet.getRow(3).height = 5
-      
+
       // Table header
       summarySheet.getCell('A4').value = 'Metric / المقياس'
       summarySheet.getCell('B4').value = 'Value / القيمة'
@@ -763,7 +765,7 @@ function Reports() {
       }
       summarySheet.getRow(4).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
       summarySheet.getRow(4).alignment = { horizontal: 'center', vertical: 'middle' }
-      
+
       // Data rows
       const summaryRows = [
         ['Total Documents / إجمالي الوثائق', exportStats.summary.total_documents],
@@ -773,7 +775,7 @@ function Reports() {
         ['Documents Last 7 Days / الوثائق آخر 7 أيام', exportStats.summary.documents_last_7_days],
         ['Avg OCR Accuracy / متوسط دقة OCR', `${exportStats.summary.avg_ocr_accuracy}%`],
       ]
-      
+
       summaryRows.forEach((row, idx) => {
         const rowNum = 5 + idx
         summarySheet.getCell(`A${rowNum}`).value = row[0]
@@ -786,11 +788,11 @@ function Reports() {
           }
         }
       })
-      
+
       // Set column widths
       summarySheet.getColumn(1).width = 50
       summarySheet.getColumn(2).width = 20
-      
+
       // Add borders
       summarySheet.eachRow((row, rowNumber) => {
         row.eachCell((cell) => {
@@ -805,230 +807,230 @@ function Reports() {
     }
 
     if (includeDashboardSheets) {
-    // Sheet 2: Classification with Chart / التصنيف مع الرسم البياني
-    const classificationSheet = includeDashboardSheets ? workbook.addWorksheet('Classification') : null as any
-    
-    classificationSheet.mergeCells('A1:C1')
-    classificationSheet.getCell('A1').value = ' Document Classification / توزيع الوثائق حسب التصنيف'
-    classificationSheet.getCell('A1').font = { bold: true, size: 14, color: { argb: 'FF' + headerColor } }
-    classificationSheet.getCell('A1').alignment = { horizontal: 'center' }
-    
-    classificationSheet.mergeCells('A2:C2')
-    classificationSheet.getCell('A2').value = `Generated: ${generatedDate}`
-    classificationSheet.getCell('A2').font = { size: 11 }
-    classificationSheet.getCell('A2').alignment = { horizontal: 'center' }
-    
-    classificationSheet.getRow(3).height = 5
-    
-    // Table
-    classificationSheet.getCell('A4').value = 'Classification / التصنيف'
-    classificationSheet.getCell('B4').value = 'Count / العدد'
-    classificationSheet.getCell('C4').value = 'Percentage / النسبة'
-    classificationSheet.getRow(4).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF' + headerColor }
-    }
-    classificationSheet.getRow(4).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
-    classificationSheet.getRow(4).alignment = { horizontal: 'center' }
-    
-    const total = Object.values(exportStats.classification_distribution).reduce((sum, val) => sum + val, 0)
-    let rowNum = 5
-    Object.entries(exportStats.classification_distribution).forEach(([k, v], idx) => {
-      const percent = total > 0 ? ((v / total) * 100).toFixed(1) : '0'
-      classificationSheet.getCell(`A${rowNum}`).value = k
-      classificationSheet.getCell(`B${rowNum}`).value = v
-      classificationSheet.getCell(`C${rowNum}`).value = `${percent}%`
-      
-      if (idx % 2 === 0) {
-        classificationSheet.getRow(rowNum).fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FF' + altRowColor }
-        }
-      }
-      rowNum++
-    })
-    
-    // Charts will be created manually by user if needed
-    // ExcelJS Charts API is complex and may not work in all environments
-    
-    // Add visual colors to data cells
-    let colorIndex = 0
-    const chartColors = ['FF00BCD4', 'FF10B981', 'FF3B82F6', 'FFA855F7', 'FFFF6B6B', 'FFFFE66D', 'FF4ECDC4']
-    Object.entries(exportStats.classification_distribution).forEach(([k, v], idx) => {
-      const rowNum = 5 + idx
-      if (classificationSheet.getCell(`B${rowNum}`)) {
-        const color = chartColors[colorIndex % chartColors.length]
-        classificationSheet.getCell(`B${rowNum}`).fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: color }
-        }
-        classificationSheet.getCell(`B${rowNum}`).font = { bold: true, color: { argb: 'FFFFFFFF' } }
-        colorIndex++
-      }
-    })
-    
-    classificationSheet.getColumn(1).width = 30
-    classificationSheet.getColumn(2).width = 15
-    classificationSheet.getColumn(3).width = 15
-    
-    // Add borders
-    for (let i = 4; i < rowNum; i++) {
-      ['A', 'B', 'C'].forEach(col => {
-        classificationSheet.getCell(`${col}${i}`).border = {
-          top: { style: 'thin', color: { argb: 'FF' + borderColor } },
-          left: { style: 'thin', color: { argb: 'FF' + borderColor } },
-          bottom: { style: 'thin', color: { argb: 'FF' + borderColor } },
-          right: { style: 'thin', color: { argb: 'FF' + borderColor } }
-        }
-      })
-    }
+      // Sheet 2: Classification with Chart / التصنيف مع الرسم البياني
+      const classificationSheet = includeDashboardSheets ? workbook.addWorksheet('Classification') : null as any
 
-    // Sheet 3: Top Users / المستخدمون
-    const usersSheet = includeDashboardSheets ? workbook.addWorksheet('Top Users') : null as any
-    
-    usersSheet.mergeCells('A1:D1')
-    usersSheet.getCell('A1').value = 'Top Active Users / أكثر المستخدمين نشاطاً'
-    usersSheet.getCell('A1').font = { bold: true, size: 14, color: { argb: 'FF' + headerColor } }
-    usersSheet.getCell('A1').alignment = { horizontal: 'center' }
-    
-    usersSheet.mergeCells('A2:D2')
-    usersSheet.getCell('A2').value = `Generated: ${generatedDate}`
-    usersSheet.getCell('A2').font = { size: 11 }
-    usersSheet.getCell('A2').alignment = { horizontal: 'center' }
-    
-    usersSheet.getRow(3).height = 5
-    
-    usersSheet.getCell('A4').value = 'Rank / الترتيب'
-    usersSheet.getCell('B4').value = 'Username / اسم المستخدم'
-    usersSheet.getCell('C4').value = 'Full Name / الاسم الكامل'
-    usersSheet.getCell('D4').value = 'Count / العدد'
-    usersSheet.getRow(4).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF' + headerColor }
-    }
-    usersSheet.getRow(4).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
-    usersSheet.getRow(4).alignment = { horizontal: 'center' }
-    
-    // Color gradient for top users based on rank
-    const rankColors = ['FFFFD700', 'FFC0C0C0', 'FFCD7F32', 'FFE0E0E0', 'FFF5F5F5']
-    
-    exportStats.top_users.forEach((u, idx) => {
-      const rowNum = 5 + idx
-      usersSheet.getCell(`A${rowNum}`).value = idx + 1
-      usersSheet.getCell(`B${rowNum}`).value = u.username
-      usersSheet.getCell(`C${rowNum}`).value = u.full_name || '-'
-      usersSheet.getCell(`D${rowNum}`).value = u.document_count
-      
-      // Add rank color to count cell for top 3
-      if (idx < 3) {
-        usersSheet.getCell(`D${rowNum}`).fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: rankColors[idx] }
-        }
-        usersSheet.getCell(`D${rowNum}`).font = { bold: true }
-      } else if (idx % 2 === 0) {
-        usersSheet.getRow(rowNum).fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FF' + altRowColor }
-        }
-      }
-    })
-    
-    const lastRow = 5 + exportStats.top_users.length - 1
-    
-    // Charts can be created manually in Excel
-    
-    usersSheet.getColumn(1).width = 12
-    usersSheet.getColumn(2).width = 25
-    usersSheet.getColumn(3).width = 30
-    usersSheet.getColumn(4).width = 15
-    
-    // Add borders
-    for (let i = 4; i <= lastRow; i++) {
-      ['A', 'B', 'C', 'D'].forEach(col => {
-        usersSheet.getCell(`${col}${i}`).border = {
-          top: { style: 'thin', color: { argb: 'FF' + borderColor } },
-          left: { style: 'thin', color: { argb: 'FF' + borderColor } },
-          bottom: { style: 'thin', color: { argb: 'FF' + borderColor } },
-          right: { style: 'thin', color: { argb: 'FF' + borderColor } }
-        }
-      })
-    }
+      classificationSheet.mergeCells('A1:C1')
+      classificationSheet.getCell('A1').value = ' Document Classification / توزيع الوثائق حسب التصنيف'
+      classificationSheet.getCell('A1').font = { bold: true, size: 14, color: { argb: 'FF' + headerColor } }
+      classificationSheet.getCell('A1').alignment = { horizontal: 'center' }
 
-    // Sheet 4: Daily Activity with Chart / النشاط اليومي مع الرسم البياني
-    const activitySheet = includeDashboardSheets ? workbook.addWorksheet('Daily Activity') : null as any
-    
-    activitySheet.mergeCells('A1:B1')
-    activitySheet.getCell('A1').value = 'Daily Activity / النشاط اليومي (Last 30 Days / آخر 30 يوم)'
-    activitySheet.getCell('A1').font = { bold: true, size: 14, color: { argb: 'FF' + headerColor } }
-    activitySheet.getCell('A1').alignment = { horizontal: 'center' }
-    
-    activitySheet.mergeCells('A2:B2')
-    activitySheet.getCell('A2').value = `Generated: ${generatedDate}`
-    activitySheet.getCell('A2').font = { size: 11 }
-    activitySheet.getCell('A2').alignment = { horizontal: 'center' }
-    
-    activitySheet.getRow(3).height = 5
-    
-    activitySheet.getCell('A4').value = 'Date / التاريخ'
-    activitySheet.getCell('B4').value = 'Count / العدد'
-    activitySheet.getRow(4).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF' + headerColor }
-    }
-    activitySheet.getRow(4).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
-    activitySheet.getRow(4).alignment = { horizontal: 'center' }
-    
-    exportStats.daily_activity.forEach((a, idx) => {
-      const rowNum = 5 + idx
-      activitySheet.getCell(`A${rowNum}`).value = a.date
-      activitySheet.getCell(`B${rowNum}`).value = a.count
-      
-      if (idx % 2 === 0) {
-        activitySheet.getRow(rowNum).fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FF' + altRowColor }
-        }
+      classificationSheet.mergeCells('A2:C2')
+      classificationSheet.getCell('A2').value = `Generated: ${generatedDate}`
+      classificationSheet.getCell('A2').font = { size: 11 }
+      classificationSheet.getCell('A2').alignment = { horizontal: 'center' }
+
+      classificationSheet.getRow(3).height = 5
+
+      // Table
+      classificationSheet.getCell('A4').value = 'Classification / التصنيف'
+      classificationSheet.getCell('B4').value = 'Count / العدد'
+      classificationSheet.getCell('C4').value = 'Percentage / النسبة'
+      classificationSheet.getRow(4).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF' + headerColor }
       }
-    })
-    
-    const activityLastRow = 5 + exportStats.daily_activity.length - 1
-    
-    // Charts can be created manually in Excel
-    
-    activitySheet.getColumn(1).width = 20
-    activitySheet.getColumn(2).width = 12
-    
-    // Add borders
-    for (let i = 4; i < activityLastRow + 1; i++) {
-      ['A', 'B'].forEach(col => {
-        activitySheet.getCell(`${col}${i}`).border = {
-          top: { style: 'thin', color: { argb: 'FF' + borderColor } },
-          left: { style: 'thin', color: { argb: 'FF' + borderColor } },
-          bottom: { style: 'thin', color: { argb: 'FF' + borderColor } },
-          right: { style: 'thin', color: { argb: 'FF' + borderColor } }
+      classificationSheet.getRow(4).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
+      classificationSheet.getRow(4).alignment = { horizontal: 'center' }
+
+      const total = Object.values(exportStats.classification_distribution).reduce((sum, val) => sum + val, 0)
+      let rowNum = 5
+      Object.entries(exportStats.classification_distribution).forEach(([k, v], idx) => {
+        const percent = total > 0 ? ((v / total) * 100).toFixed(1) : '0'
+        classificationSheet.getCell(`A${rowNum}`).value = k
+        classificationSheet.getCell(`B${rowNum}`).value = v
+        classificationSheet.getCell(`C${rowNum}`).value = `${percent}%`
+
+        if (idx % 2 === 0) {
+          classificationSheet.getRow(rowNum).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF' + altRowColor }
+          }
+        }
+        rowNum++
+      })
+
+      // Charts will be created manually by user if needed
+      // ExcelJS Charts API is complex and may not work in all environments
+
+      // Add visual colors to data cells
+      let colorIndex = 0
+      const chartColors = ['FF00BCD4', 'FF10B981', 'FF3B82F6', 'FFA855F7', 'FFFF6B6B', 'FFFFE66D', 'FF4ECDC4']
+      Object.entries(exportStats.classification_distribution).forEach(([k, v], idx) => {
+        const rowNum = 5 + idx
+        if (classificationSheet.getCell(`B${rowNum}`)) {
+          const color = chartColors[colorIndex % chartColors.length]
+          classificationSheet.getCell(`B${rowNum}`).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: color }
+          }
+          classificationSheet.getCell(`B${rowNum}`).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+          colorIndex++
         }
       })
-    }
+
+      classificationSheet.getColumn(1).width = 30
+      classificationSheet.getColumn(2).width = 15
+      classificationSheet.getColumn(3).width = 15
+
+      // Add borders
+      for (let i = 4; i < rowNum; i++) {
+        ['A', 'B', 'C'].forEach(col => {
+          classificationSheet.getCell(`${col}${i}`).border = {
+            top: { style: 'thin', color: { argb: 'FF' + borderColor } },
+            left: { style: 'thin', color: { argb: 'FF' + borderColor } },
+            bottom: { style: 'thin', color: { argb: 'FF' + borderColor } },
+            right: { style: 'thin', color: { argb: 'FF' + borderColor } }
+          }
+        })
+      }
+
+      // Sheet 3: Top Users / المستخدمون
+      const usersSheet = includeDashboardSheets ? workbook.addWorksheet('Top Users') : null as any
+
+      usersSheet.mergeCells('A1:D1')
+      usersSheet.getCell('A1').value = 'Top Active Users / أكثر المستخدمين نشاطاً'
+      usersSheet.getCell('A1').font = { bold: true, size: 14, color: { argb: 'FF' + headerColor } }
+      usersSheet.getCell('A1').alignment = { horizontal: 'center' }
+
+      usersSheet.mergeCells('A2:D2')
+      usersSheet.getCell('A2').value = `Generated: ${generatedDate}`
+      usersSheet.getCell('A2').font = { size: 11 }
+      usersSheet.getCell('A2').alignment = { horizontal: 'center' }
+
+      usersSheet.getRow(3).height = 5
+
+      usersSheet.getCell('A4').value = 'Rank / الترتيب'
+      usersSheet.getCell('B4').value = 'Username / اسم المستخدم'
+      usersSheet.getCell('C4').value = 'Full Name / الاسم الكامل'
+      usersSheet.getCell('D4').value = 'Count / العدد'
+      usersSheet.getRow(4).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF' + headerColor }
+      }
+      usersSheet.getRow(4).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
+      usersSheet.getRow(4).alignment = { horizontal: 'center' }
+
+      // Color gradient for top users based on rank
+      const rankColors = ['FFFFD700', 'FFC0C0C0', 'FFCD7F32', 'FFE0E0E0', 'FFF5F5F5']
+
+      exportStats.top_users.forEach((u, idx) => {
+        const rowNum = 5 + idx
+        usersSheet.getCell(`A${rowNum}`).value = idx + 1
+        usersSheet.getCell(`B${rowNum}`).value = u.username
+        usersSheet.getCell(`C${rowNum}`).value = u.full_name || '-'
+        usersSheet.getCell(`D${rowNum}`).value = u.document_count
+
+        // Add rank color to count cell for top 3
+        if (idx < 3) {
+          usersSheet.getCell(`D${rowNum}`).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: rankColors[idx] }
+          }
+          usersSheet.getCell(`D${rowNum}`).font = { bold: true }
+        } else if (idx % 2 === 0) {
+          usersSheet.getRow(rowNum).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF' + altRowColor }
+          }
+        }
+      })
+
+      const lastRow = 5 + exportStats.top_users.length - 1
+
+      // Charts can be created manually in Excel
+
+      usersSheet.getColumn(1).width = 12
+      usersSheet.getColumn(2).width = 25
+      usersSheet.getColumn(3).width = 30
+      usersSheet.getColumn(4).width = 15
+
+      // Add borders
+      for (let i = 4; i <= lastRow; i++) {
+        ['A', 'B', 'C', 'D'].forEach(col => {
+          usersSheet.getCell(`${col}${i}`).border = {
+            top: { style: 'thin', color: { argb: 'FF' + borderColor } },
+            left: { style: 'thin', color: { argb: 'FF' + borderColor } },
+            bottom: { style: 'thin', color: { argb: 'FF' + borderColor } },
+            right: { style: 'thin', color: { argb: 'FF' + borderColor } }
+          }
+        })
+      }
+
+      // Sheet 4: Daily Activity with Chart / النشاط اليومي مع الرسم البياني
+      const activitySheet = includeDashboardSheets ? workbook.addWorksheet('Daily Activity') : null as any
+
+      activitySheet.mergeCells('A1:B1')
+      activitySheet.getCell('A1').value = 'Daily Activity / النشاط اليومي (Last 30 Days / آخر 30 يوم)'
+      activitySheet.getCell('A1').font = { bold: true, size: 14, color: { argb: 'FF' + headerColor } }
+      activitySheet.getCell('A1').alignment = { horizontal: 'center' }
+
+      activitySheet.mergeCells('A2:B2')
+      activitySheet.getCell('A2').value = `Generated: ${generatedDate}`
+      activitySheet.getCell('A2').font = { size: 11 }
+      activitySheet.getCell('A2').alignment = { horizontal: 'center' }
+
+      activitySheet.getRow(3).height = 5
+
+      activitySheet.getCell('A4').value = 'Date / التاريخ'
+      activitySheet.getCell('B4').value = 'Count / العدد'
+      activitySheet.getRow(4).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF' + headerColor }
+      }
+      activitySheet.getRow(4).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
+      activitySheet.getRow(4).alignment = { horizontal: 'center' }
+
+      exportStats.daily_activity.forEach((a, idx) => {
+        const rowNum = 5 + idx
+        activitySheet.getCell(`A${rowNum}`).value = a.date
+        activitySheet.getCell(`B${rowNum}`).value = a.count
+
+        if (idx % 2 === 0) {
+          activitySheet.getRow(rowNum).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF' + altRowColor }
+          }
+        }
+      })
+
+      const activityLastRow = 5 + exportStats.daily_activity.length - 1
+
+      // Charts can be created manually in Excel
+
+      activitySheet.getColumn(1).width = 20
+      activitySheet.getColumn(2).width = 12
+
+      // Add borders
+      for (let i = 4; i < activityLastRow + 1; i++) {
+        ['A', 'B'].forEach(col => {
+          activitySheet.getCell(`${col}${i}`).border = {
+            top: { style: 'thin', color: { argb: 'FF' + borderColor } },
+            left: { style: 'thin', color: { argb: 'FF' + borderColor } },
+            bottom: { style: 'thin', color: { argb: 'FF' + borderColor } },
+            right: { style: 'thin', color: { argb: 'FF' + borderColor } }
+          }
+        })
+      }
     } // includeDashboardSheets
 
     // Sheet 5: Documents List / قائمة الوثائق
     if (documentsData && documentsData.documents && documentsData.documents.length > 0) {
       const documentsSheet = workbook.addWorksheet('Documents List')
-      
+
       documentsSheet.mergeCells('A1:G1')
       documentsSheet.getCell('A1').value = ' Documents List / قائمة الوثائق'
       documentsSheet.getCell('A1').font = { bold: true, size: 14, color: { argb: 'FF' + headerColor } }
       documentsSheet.getCell('A1').alignment = { horizontal: 'center' }
-      
+
       documentsSheet.mergeCells('A2:G2')
       let dateRowText = `Generated: ${generatedDate}`
       if (dateFrom || dateTo) {
@@ -1044,9 +1046,9 @@ function Reports() {
       documentsSheet.getCell('A2').value = dateRowText
       documentsSheet.getCell('A2').font = { size: 11 }
       documentsSheet.getCell('A2').alignment = { horizontal: 'center' }
-      
+
       documentsSheet.getRow(3).height = 5
-      
+
       documentsSheet.getCell('A4').value = '#'
       documentsSheet.getCell('B4').value = 'Document Number / رقم الوثيقة'
       documentsSheet.getCell('C4').value = 'Title / العنوان'
@@ -1061,7 +1063,7 @@ function Reports() {
       }
       documentsSheet.getRow(4).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
       documentsSheet.getRow(4).alignment = { horizontal: 'center' }
-      
+
       const formatDate = (timestamp?: string) => {
         if (!timestamp) return '—'
         try {
@@ -1078,7 +1080,7 @@ function Reports() {
           return timestamp
         }
       }
-      
+
       documentsData.documents.forEach((doc: any, idx: number) => {
         const rowNum = 5 + idx
         documentsSheet.getCell(`A${rowNum}`).value = idx + 1
@@ -1088,7 +1090,7 @@ function Reports() {
         documentsSheet.getCell(`E${rowNum}`).value = formatDate(doc.created_at)
         documentsSheet.getCell(`F${rowNum}`).value = doc.document_direction || 'غير محدد'
         documentsSheet.getCell(`G${rowNum}`).value = doc.ai_classification || 'غير مصنف'
-        
+
         if (idx % 2 === 0) {
           documentsSheet.getRow(rowNum).fill = {
             type: 'pattern',
@@ -1097,7 +1099,7 @@ function Reports() {
           }
         }
       })
-      
+
       documentsSheet.getColumn(1).width = 8
       documentsSheet.getColumn(2).width = 20
       documentsSheet.getColumn(3).width = 40
@@ -1105,7 +1107,7 @@ function Reports() {
       documentsSheet.getColumn(5).width = 25
       documentsSheet.getColumn(6).width = 15
       documentsSheet.getColumn(7).width = 20
-      
+
       const docsLastRow = 5 + documentsData.documents.length - 1
       for (let i = 4; i <= docsLastRow; i++) {
         ['A', 'B', 'C', 'D', 'E', 'F', 'G'].forEach(col => {
@@ -1131,9 +1133,9 @@ function Reports() {
   }
 
   const exportLoginActivityPDF = (data: any, dateFrom: string, dateTo: string) => {
-    const generatedDate = new Date().toLocaleString('en-US', { 
-      year: 'numeric', 
-      month: '2-digit', 
+    const generatedDate = new Date().toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
@@ -1270,10 +1272,10 @@ function Reports() {
       alert('فشل فتح نافذة الطباعة')
       return
     }
-    
+
     printWindow.document.write(pdfContent)
     printWindow.document.close()
-    
+
     setTimeout(() => {
       printWindow.focus()
       printWindow.print()
@@ -1288,12 +1290,12 @@ function Reports() {
     const borderColor = 'E0E0E0'
 
     const sheet = workbook.addWorksheet('Login Activity')
-    
+
     sheet.mergeCells('A1:E1')
     sheet.getCell('A1').value = ' Login Activity Report / تقرير نشاط تسجيل الدخول'
     sheet.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FF' + headerColor } }
     sheet.getCell('A1').alignment = { horizontal: 'center' }
-    
+
     sheet.mergeCells('A2:E2')
     let dateRowText = `Generated: ${new Date().toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true })}`
     if (dateFrom || dateTo) {
@@ -1302,9 +1304,9 @@ function Reports() {
     sheet.getCell('A2').value = dateRowText
     sheet.getCell('A2').font = { size: 11 }
     sheet.getCell('A2').alignment = { horizontal: 'center' }
-    
+
     sheet.getRow(3).height = 5
-    
+
     sheet.getCell('A4').value = '#'
     sheet.getCell('B4').value = 'Username / اسم المستخدم'
     sheet.getCell('C4').value = 'Full Name / الاسم الكامل'
@@ -1313,7 +1315,7 @@ function Reports() {
     sheet.getRow(4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + headerColor } }
     sheet.getRow(4).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
     sheet.getRow(4).alignment = { horizontal: 'center' }
-    
+
     const formatDate = (timestamp?: string) => {
       if (!timestamp) return '—'
       try {
@@ -1330,7 +1332,7 @@ function Reports() {
         return timestamp
       }
     }
-    
+
     data.logs.forEach((log: any, idx: number) => {
       const rowNum = 5 + idx
       sheet.getCell(`A${rowNum}`).value = idx + 1
@@ -1338,18 +1340,18 @@ function Reports() {
       sheet.getCell(`C${rowNum}`).value = log.full_name || '-'
       sheet.getCell(`D${rowNum}`).value = formatDate(log.timestamp)
       sheet.getCell(`E${rowNum}`).value = log.ip_address || '-'
-      
+
       if (idx % 2 === 0) {
         sheet.getRow(rowNum).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + altRowColor } }
       }
     })
-    
+
     sheet.getColumn(1).width = 8
     sheet.getColumn(2).width = 20
     sheet.getColumn(3).width = 25
     sheet.getColumn(4).width = 25
     sheet.getColumn(5).width = 18
-    
+
     for (let i = 4; i < 5 + data.logs.length; i++) {
       ['A', 'B', 'C', 'D', 'E'].forEach(col => {
         sheet.getCell(`${col}${i}`).border = {
@@ -1372,9 +1374,9 @@ function Reports() {
   }
 
   const exportUserActivityPDF = (data: any, dateFrom: string, dateTo: string, activityType: 'login' | 'documents' | 'both' = 'both') => {
-    const generatedDate = new Date().toLocaleString('en-US', { 
-      year: 'numeric', 
-      month: '2-digit', 
+    const generatedDate = new Date().toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
@@ -1386,7 +1388,7 @@ function Reports() {
     if (dateFrom || dateTo) {
       filtersText = `<div style="margin-bottom: 20px; padding: 15px; background: #f0f0f0; border-radius: 8px;"><strong>Period:</strong><br>From: ${dateFrom} To: ${dateTo}</div>`
     }
-    
+
     let activityTypeText = ''
     if (activityType === 'login') {
       activityTypeText = '<div style="margin-bottom: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;"><strong>نوع النشاط:</strong> تسجيل الدخول فقط</div>'
@@ -1557,10 +1559,10 @@ function Reports() {
       alert('فشل فتح نافذة الطباعة')
       return
     }
-    
+
     printWindow.document.write(pdfContent)
     printWindow.document.close()
-    
+
     setTimeout(() => {
       printWindow.focus()
       printWindow.print()
@@ -1595,12 +1597,12 @@ function Reports() {
     // Sheet 1: Activities (only if needed)
     if (activityType === 'both' || activityType === 'login') {
       const activitiesSheet = workbook.addWorksheet('Activities')
-      
+
       activitiesSheet.mergeCells('A1:D1')
       activitiesSheet.getCell('A1').value = ` User Activity Report / تقرير نشاط المستخدم - ${data.user.username}`
       activitiesSheet.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FF' + headerColor } }
       activitiesSheet.getCell('A1').alignment = { horizontal: 'center' }
-      
+
       activitiesSheet.mergeCells('A2:D2')
       let dateRowText = `Generated: ${new Date().toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true })}`
       if (dateFrom || dateTo) {
@@ -1617,9 +1619,9 @@ function Reports() {
       activitiesSheet.getCell('A2').value = dateRowText + activityTypeText
       activitiesSheet.getCell('A2').font = { size: 11 }
       activitiesSheet.getCell('A2').alignment = { horizontal: 'center' }
-      
+
       activitiesSheet.getRow(3).height = 5
-      
+
       activitiesSheet.getCell('A4').value = '#'
       activitiesSheet.getCell('B4').value = 'Action / الإجراء'
       activitiesSheet.getCell('C4').value = 'Date & Time / التاريخ والوقت (بدقة الساعة)'
@@ -1627,19 +1629,19 @@ function Reports() {
       activitiesSheet.getRow(4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + headerColor } }
       activitiesSheet.getRow(4).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
       activitiesSheet.getRow(4).alignment = { horizontal: 'center' }
-      
+
       data.activities.items.forEach((activity: any, idx: number) => {
         const rowNum = 5 + idx
         activitiesSheet.getCell(`A${rowNum}`).value = idx + 1
         activitiesSheet.getCell(`B${rowNum}`).value = activity.action
         activitiesSheet.getCell(`C${rowNum}`).value = formatDate(activity.timestamp)
         activitiesSheet.getCell(`D${rowNum}`).value = activity.ip_address || '-'
-        
+
         if (idx % 2 === 0) {
           activitiesSheet.getRow(rowNum).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + altRowColor } }
         }
       })
-      
+
       activitiesSheet.getColumn(1).width = 8
       activitiesSheet.getColumn(2).width = 25
       activitiesSheet.getColumn(3).width = 30
@@ -1662,12 +1664,12 @@ function Reports() {
     // Sheet 2: Documents (only if needed)
     if (activityType === 'both' || activityType === 'documents') {
       const documentsSheet = workbook.addWorksheet('Documents')
-      
+
       documentsSheet.mergeCells('A1:F1')
       documentsSheet.getCell('A1').value = ` Documents by ${data.user.username} / وثائق ${data.user.username}`
       documentsSheet.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FF' + headerColor } }
       documentsSheet.getCell('A1').alignment = { horizontal: 'center' }
-      
+
       documentsSheet.mergeCells('A2:F2')
       let dateRowText = `Generated: ${new Date().toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true })}`
       if (dateFrom || dateTo) {
@@ -1684,9 +1686,9 @@ function Reports() {
       documentsSheet.getCell('A2').value = dateRowText + activityTypeText
       documentsSheet.getCell('A2').font = { size: 11 }
       documentsSheet.getCell('A2').alignment = { horizontal: 'center' }
-      
+
       documentsSheet.getRow(3).height = 5
-      
+
       documentsSheet.getCell('A4').value = '#'
       documentsSheet.getCell('B4').value = 'Document Number / رقم الوثيقة'
       documentsSheet.getCell('C4').value = 'Title / العنوان'
@@ -1696,7 +1698,7 @@ function Reports() {
       documentsSheet.getRow(4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + headerColor } }
       documentsSheet.getRow(4).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
       documentsSheet.getRow(4).alignment = { horizontal: 'center' }
-      
+
       data.documents.items.forEach((doc: any, idx: number) => {
         const rowNum = 5 + idx
         documentsSheet.getCell(`A${rowNum}`).value = idx + 1
@@ -1705,12 +1707,12 @@ function Reports() {
         documentsSheet.getCell(`D${rowNum}`).value = formatDate(doc.created_at)
         documentsSheet.getCell(`E${rowNum}`).value = doc.document_direction || 'غير محدد'
         documentsSheet.getCell(`F${rowNum}`).value = doc.ai_classification || 'غير مصنف'
-        
+
         if (idx % 2 === 0) {
           documentsSheet.getRow(rowNum).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + altRowColor } }
         }
       })
-      
+
       documentsSheet.getColumn(1).width = 8
       documentsSheet.getColumn(2).width = 20
       documentsSheet.getColumn(3).width = 40
@@ -1743,9 +1745,9 @@ function Reports() {
   }
 
   const exportUsersActivityPDF = (data: any, dateFrom: string, dateTo: string) => {
-    const generatedDate = new Date().toLocaleString('en-US', { 
-      year: 'numeric', 
-      month: '2-digit', 
+    const generatedDate = new Date().toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
@@ -1761,7 +1763,7 @@ function Reports() {
         filtersText = `<div style="margin-bottom: 20px; padding: 15px; background: #f0f0f0; border-radius: 8px;"><strong>الفترة:</strong> من ${dateFrom} إلى ${dateTo}</div>`
       }
     }
-    
+
     let activityTypeText = ''
     if (data.activity_type === 'login') {
       activityTypeText = '<div style="margin-bottom: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;"><strong>نوع النشاط:</strong> تسجيل الدخول فقط</div>'
@@ -1949,10 +1951,10 @@ function Reports() {
       alert('فشل فتح نافذة الطباعة')
       return
     }
-    
+
     printWindow.document.write(pdfContent)
     printWindow.document.close()
-    
+
     setTimeout(() => {
       printWindow.focus()
       printWindow.print()
@@ -1989,12 +1991,12 @@ function Reports() {
       // Sheet for each user with both activities and documents
       data.users.forEach((userData: any, userIdx: number) => {
         const userSheet = workbook.addWorksheet(`${userData.user.username}`)
-        
+
         userSheet.mergeCells('A1:F1')
         userSheet.getCell('A1').value = ` ${userData.user.username} ${userData.user.full_name ? `(${userData.user.full_name})` : ''}`
         userSheet.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FF' + headerColor } }
         userSheet.getCell('A1').alignment = { horizontal: 'center' }
-        
+
         let dateRowText = `Generated: ${new Date().toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true })}`
         if (dateFrom === dateTo) {
           dateRowText += ` | Date: ${dateFrom}`
@@ -2005,43 +2007,43 @@ function Reports() {
         userSheet.getCell('A2').value = dateRowText
         userSheet.getCell('A2').font = { size: 11 }
         userSheet.getCell('A2').alignment = { horizontal: 'center' }
-        
+
         userSheet.getRow(3).height = 5
-        
+
         // Activities section
         if (userData.activities.count > 0) {
           userSheet.mergeCells('A4:D4')
           userSheet.getCell('A4').value = `نشاط تسجيل الدخول (${userData.activities.count})`
           userSheet.getCell('A4').font = { bold: true, size: 12 }
-          
+
           userSheet.getCell('A5').value = '#'
           userSheet.getCell('B5').value = 'Action / الإجراء'
           userSheet.getCell('C5').value = 'Date & Time / التاريخ والوقت (بدقة الساعة)'
           userSheet.getCell('D5').value = 'IP Address / عنوان IP'
           userSheet.getRow(5).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + headerColor } }
           userSheet.getRow(5).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
-          
+
           userData.activities.items.forEach((activity: any, idx: number) => {
             const rowNum = 6 + idx
             userSheet.getCell(`A${rowNum}`).value = idx + 1
             userSheet.getCell(`B${rowNum}`).value = activity.action
             userSheet.getCell(`C${rowNum}`).value = formatDate(activity.timestamp)
             userSheet.getCell(`D${rowNum}`).value = activity.ip_address || '-'
-            
+
             if (idx % 2 === 0) {
               userSheet.getRow(rowNum).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + altRowColor } }
             }
           })
-          
+
           const activitiesEndRow = 6 + userData.activities.items.length
           userSheet.getRow(activitiesEndRow).height = 10
-          
+
           // Documents section
           if (userData.documents.count > 0) {
             userSheet.mergeCells(`A${activitiesEndRow + 1}:F${activitiesEndRow + 1}`)
             userSheet.getCell(`A${activitiesEndRow + 1}`).value = `الوثائق التي رفعها (${userData.documents.count})`
             userSheet.getCell(`A${activitiesEndRow + 1}`).font = { bold: true, size: 12 }
-            
+
             userSheet.getCell(`A${activitiesEndRow + 2}`).value = '#'
             userSheet.getCell(`B${activitiesEndRow + 2}`).value = 'Document Number / رقم الوثيقة'
             userSheet.getCell(`C${activitiesEndRow + 2}`).value = 'Title / العنوان'
@@ -2050,7 +2052,7 @@ function Reports() {
             userSheet.getCell(`F${activitiesEndRow + 2}`).value = 'Classification / التصنيف'
             userSheet.getRow(activitiesEndRow + 2).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + headerColor } }
             userSheet.getRow(activitiesEndRow + 2).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
-            
+
             userData.documents.items.forEach((doc: any, idx: number) => {
               const rowNum = activitiesEndRow + 3 + idx
               userSheet.getCell(`A${rowNum}`).value = idx + 1
@@ -2059,7 +2061,7 @@ function Reports() {
               userSheet.getCell(`D${rowNum}`).value = formatDate(doc.created_at)
               userSheet.getCell(`E${rowNum}`).value = doc.document_direction || 'غير محدد'
               userSheet.getCell(`F${rowNum}`).value = doc.ai_classification || 'غير مصنف'
-              
+
               if (idx % 2 === 0) {
                 userSheet.getRow(rowNum).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + altRowColor } }
               }
@@ -2070,7 +2072,7 @@ function Reports() {
           userSheet.mergeCells('A4:F4')
           userSheet.getCell('A4').value = `الوثائق التي رفعها (${userData.documents.count})`
           userSheet.getCell('A4').font = { bold: true, size: 12 }
-          
+
           userSheet.getCell('A5').value = '#'
           userSheet.getCell('B5').value = 'Document Number / رقم الوثيقة'
           userSheet.getCell('C5').value = 'Title / العنوان'
@@ -2079,7 +2081,7 @@ function Reports() {
           userSheet.getCell('F5').value = 'Classification / التصنيف'
           userSheet.getRow(5).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + headerColor } }
           userSheet.getRow(5).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
-          
+
           userData.documents.items.forEach((doc: any, idx: number) => {
             const rowNum = 6 + idx
             userSheet.getCell(`A${rowNum}`).value = idx + 1
@@ -2088,13 +2090,13 @@ function Reports() {
             userSheet.getCell(`D${rowNum}`).value = formatDate(doc.created_at)
             userSheet.getCell(`E${rowNum}`).value = doc.document_direction || 'غير محدد'
             userSheet.getCell(`F${rowNum}`).value = doc.ai_classification || 'غير مصنف'
-            
+
             if (idx % 2 === 0) {
               userSheet.getRow(rowNum).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + altRowColor } }
             }
           })
         }
-        
+
         userSheet.getColumn(1).width = 8
         userSheet.getColumn(2).width = 25
         userSheet.getColumn(3).width = 40
@@ -2105,12 +2107,12 @@ function Reports() {
     } else {
       // Single sheet for all users (login or documents only)
       const sheet = workbook.addWorksheet('Users Activity')
-      
+
       sheet.mergeCells('A1:E1')
       sheet.getCell('A1').value = `Users Activity Report / تقرير نشاط المستخدمين`
       sheet.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FF' + headerColor } }
       sheet.getCell('A1').alignment = { horizontal: 'center' }
-      
+
       sheet.mergeCells('A2:E2')
       let dateRowText = `Generated: ${new Date().toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true })}`
       if (dateFrom === dateTo) {
@@ -2122,16 +2124,16 @@ function Reports() {
       sheet.getCell('A2').value = dateRowText + activityTypeText
       sheet.getCell('A2').font = { size: 11 }
       sheet.getCell('A2').alignment = { horizontal: 'center' }
-      
+
       sheet.getRow(3).height = 5
-      
+
       if (data.activity_type === 'login') {
         sheet.getCell('A4').value = 'Username / اسم المستخدم'
         sheet.getCell('B4').value = 'Full Name / الاسم الكامل'
         sheet.getCell('C4').value = 'Action / الإجراء'
         sheet.getCell('D4').value = 'Date & Time / التاريخ والوقت (بدقة الساعة)'
         sheet.getCell('E4').value = 'IP Address / عنوان IP'
-        
+
         let rowNum = 5
         data.users.forEach((userData: any) => {
           userData.activities.items.forEach((activity: any) => {
@@ -2140,14 +2142,14 @@ function Reports() {
             sheet.getCell(`C${rowNum}`).value = activity.action
             sheet.getCell(`D${rowNum}`).value = formatDate(activity.timestamp)
             sheet.getCell(`E${rowNum}`).value = activity.ip_address || '-'
-            
+
             if ((rowNum - 5) % 2 === 0) {
               sheet.getRow(rowNum).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + altRowColor } }
             }
             rowNum++
           })
         })
-        
+
         sheet.getColumn(1).width = 20
         sheet.getColumn(2).width = 25
         sheet.getColumn(3).width = 25
@@ -2159,7 +2161,7 @@ function Reports() {
         sheet.getCell('C4').value = 'Document Number / رقم الوثيقة'
         sheet.getCell('D4').value = 'Title / العنوان'
         sheet.getCell('E4').value = 'Date & Time / التاريخ والوقت (بدقة الساعة)'
-        
+
         let rowNum = 5
         data.users.forEach((userData: any) => {
           userData.documents.items.forEach((doc: any) => {
@@ -2168,21 +2170,21 @@ function Reports() {
             sheet.getCell(`C${rowNum}`).value = doc.document_number || '-'
             sheet.getCell(`D${rowNum}`).value = doc.title || 'بدون عنوان'
             sheet.getCell(`E${rowNum}`).value = formatDate(doc.created_at)
-            
+
             if ((rowNum - 5) % 2 === 0) {
               sheet.getRow(rowNum).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + altRowColor } }
             }
             rowNum++
           })
         })
-        
+
         sheet.getColumn(1).width = 20
         sheet.getColumn(2).width = 25
         sheet.getColumn(3).width = 20
         sheet.getColumn(4).width = 40
         sheet.getColumn(5).width = 30
       }
-      
+
       sheet.getRow(4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + headerColor } }
       sheet.getRow(4).font = { bold: true, color: { argb: 'FF' + headerTextColor } }
       sheet.getRow(4).alignment = { horizontal: 'center' }
@@ -2245,71 +2247,73 @@ function Reports() {
   return (
     <div className="space-y-6">
       {/* رأس الصفحة */}
-      <div className="card">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-cyan-400 mb-2"> التقارير والإحصائيات</h1>
-            <p className="text-text-secondary">نظرة شاملة على أداء النظام</p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => openExportModal('excel')}
-              className="px-4 py-2 rounded-xl border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-green-400 transition"
-            >
- تصدير Excel
-            </button>
-            <button
-              onClick={() => openExportModal('pdf')}
-              className="px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition"
-            >
- تصدير PDF
-            </button>
-            <button onClick={loadStats} className="btn-primary flex items-center gap-2">
-              <span className="relative flex h-4 w-4">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/50"></span>
-                <span className="relative inline-flex rounded-full h-4 w-4 bg-white/80"></span>
-              </span>
-              تحديث
-            </button>
+      <div className={`rounded-xl p-6 ${theme === 'dark' ? 'card' : 'bg-white border-2 border-cyan-200 shadow-lg'}`}>
+        <div className={`${theme === 'light' ? 'border-t-4 border-t-cyan-500 -mt-6 -mx-6 px-6 pt-6 mb-4' : ''}`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}> التقارير والإحصائيات</h1>
+              <p className={`${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>نظرة شاملة على أداء النظام</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => openExportModal('excel')}
+                className={`px-4 py-2 rounded-xl border transition ${theme === 'dark' ? 'border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-green-400' : 'border-green-300 bg-green-50 hover:bg-green-100 text-green-600'}`}
+              >
+                تصدير Excel
+              </button>
+              <button
+                onClick={() => openExportModal('pdf')}
+                className={`px-4 py-2 rounded-xl border transition ${theme === 'dark' ? 'border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'border-red-300 bg-red-50 hover:bg-red-100 text-red-600'}`}
+              >
+                تصدير PDF
+              </button>
+              <button onClick={loadStats} className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${theme === 'dark' ? 'btn-primary' : 'bg-cyan-500 text-white hover:bg-cyan-600 shadow-md'}`}>
+                <span className="relative flex h-4 w-4">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/50"></span>
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-white/80"></span>
+                </span>
+                تحديث
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* فلترة التقارير */}
-      <div className="card">
-        <h2 className="text-xl font-bold text-cyan-400 mb-4"> فلترة التقارير</h2>
+      <div className={`rounded-xl p-6 ${theme === 'dark' ? 'card' : 'bg-white border-2 border-cyan-200 shadow-lg'}`}>
+        <h2 className={`text-xl font-bold mb-4 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}> فلترة التقارير</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>
               من تاريخ
             </label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-text-primary focus:outline-none focus:border-cyan-500"
+              className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:border-cyan-500 ${theme === 'dark' ? 'bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-text-primary' : 'bg-white border-2 border-cyan-200 text-slate-700'}`}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">
+            <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>
               إلى تاريخ
             </label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-text-primary focus:outline-none focus:border-cyan-500"
+              className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:border-cyan-500 ${theme === 'dark' ? 'bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-text-primary' : 'bg-white border-2 border-cyan-200 text-slate-700'}`}
             />
           </div>
           {isAdmin && (
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">
+              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>
                 المستخدم
               </label>
               <select
                 value={selectedUserId || ''}
                 onChange={(e) => setSelectedUserId(e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-text-primary focus:outline-none focus:border-cyan-500"
+                className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:border-cyan-500 ${theme === 'dark' ? 'bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-text-primary' : 'bg-white border-2 border-cyan-200 text-slate-700'}`}
               >
                 <option value="">جميع المستخدمين</option>
                 {users.map((user) => (
@@ -2323,19 +2327,19 @@ function Reports() {
           <div className="flex items-end">
             <button
               onClick={clearFilters}
-              className="w-full px-4 py-2 rounded-lg border border-gray-500/30 bg-gray-500/10 hover:bg-gray-500/20 text-gray-400 transition"
+              className={`w-full px-4 py-2 rounded-lg border transition ${theme === 'dark' ? 'border-gray-500/30 bg-gray-500/10 hover:bg-gray-500/20 text-gray-400' : 'border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-600'}`}
             >
- مسح الفلاتر
+              مسح الفلاتر
             </button>
           </div>
         </div>
         {(dateFrom || dateTo || selectedUserId) && (
-          <div className="mt-4 p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-sm">
-            <span className="text-text-secondary">الفلاتر النشطة: </span>
-            {dateFrom && <span className="text-cyan-400">من {dateFrom}</span>}
-            {dateTo && <span className="text-cyan-400 mr-2">إلى {dateTo}</span>}
+          <div className={`mt-4 p-3 rounded-lg text-sm ${theme === 'dark' ? 'bg-cyan-500/10 border border-cyan-500/30' : 'bg-cyan-50 border border-cyan-200'}`}>
+            <span className={theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}>الفلاتر النشطة: </span>
+            {dateFrom && <span className={theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}>من {dateFrom}</span>}
+            {dateTo && <span className={`${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'} mr-2`}>إلى {dateTo}</span>}
             {selectedUserId && (
-              <span className="text-cyan-400">
+              <span className={theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}>
                 مستخدم: {users.find(u => u.id === selectedUserId)?.username}
               </span>
             )}
@@ -2347,7 +2351,7 @@ function Reports() {
       <div className="space-y-6">
         {/* مجموعة 1: إحصائيات الوثائق */}
         <div>
-          <h2 className="text-lg font-semibold text-cyan-400 mb-4 flex items-center gap-2">
+          <h2 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>
             إحصائيات الوثائق
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -2475,21 +2479,21 @@ function Reports() {
 
       {/* الرسوم البيانية - محسّنة بشكل أفضل */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-cyan-400 flex items-center gap-2">
+        <h2 className={`text-xl font-semibold flex items-center gap-2 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>
           <span className="text-2xl"></span>
           التحليل البصري للبيانات
         </h2>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* النشاط اليومي - محسّن */}
-          <div className="card bg-gradient-to-br from-base-900 to-base-800 border-cyan-500/20 shadow-xl">
+          <div className={`rounded-xl p-6 shadow-xl ${theme === 'dark' ? 'card bg-gradient-to-br from-base-900 to-base-800 border-cyan-500/20' : 'bg-white border-2 border-cyan-200'}`}>
             <div className="mb-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-400/10 border border-cyan-400/40 flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-cyan-300/60 border-t-transparent border-r-transparent rotate-45"></div>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${theme === 'dark' ? 'bg-gradient-to-br from-cyan-500/20 to-cyan-400/10 border border-cyan-400/40' : 'bg-cyan-100 border border-cyan-300'}`}>
+                <div className={`w-6 h-6 border-2 border-t-transparent border-r-transparent rotate-45 ${theme === 'dark' ? 'border-cyan-300/60' : 'border-cyan-500'}`}></div>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-cyan-400">النشاط اليومي</h3>
-                <p className="text-xs text-text-secondary">آخر 30 يوم من النشاط</p>
+                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>النشاط اليومي</h3>
+                <p className={`text-xs ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>آخر 30 يوم من النشاط</p>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={320}>
@@ -2501,20 +2505,20 @@ function Reports() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.3} />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="#888" 
+                <XAxis
+                  dataKey="date"
+                  stroke="#888"
                   tick={{ fill: '#888', fontSize: 11 }}
                   tickMargin={8}
                 />
-                <YAxis 
-                  stroke="#888" 
+                <YAxis
+                  stroke="#888"
                   tick={{ fill: '#888', fontSize: 11 }}
                   tickMargin={8}
                 />
                 <Tooltip
-                  contentStyle={{ 
-                    backgroundColor: '#1a1a1a', 
+                  contentStyle={{
+                    backgroundColor: '#1a1a1a',
                     border: '1px solid #00BCD4',
                     borderRadius: '8px',
                     padding: '10px'
@@ -2522,11 +2526,11 @@ function Reports() {
                   labelStyle={{ color: '#00BCD4', fontWeight: 'bold' }}
                   itemStyle={{ color: '#00BCD4' }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="count" 
-                  stroke="#00BCD4" 
-                  strokeWidth={3} 
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#00BCD4"
+                  strokeWidth={3}
                   dot={{ fill: '#00BCD4', r: 5, strokeWidth: 2, stroke: '#1a1a1a' }}
                   activeDot={{ r: 7, fill: '#00BCD4' }}
                 />
@@ -2535,10 +2539,10 @@ function Reports() {
           </div>
 
           {/* التصنيف - دائرة محسّنة بدون نصوص داخلية */}
-          <div className="card bg-gradient-to-br from-base-900 to-base-800 border-purple-500/20 shadow-xl">
+          <div className={`rounded-xl p-6 shadow-xl ${theme === 'dark' ? 'card bg-gradient-to-br from-base-900 to-base-800 border-purple-500/20' : 'bg-white border-2 border-purple-200'}`}>
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-purple-400 mb-1"> توزيع حسب التصنيف</h3>
-              <p className="text-xs text-text-secondary">نسبة كل نوع من الوثائق</p>
+              <h3 className={`text-lg font-semibold mb-1 ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`}> توزيع حسب التصنيف</h3>
+              <p className={`text-xs ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>نسبة كل نوع من الوثائق</p>
             </div>
             <ResponsiveContainer width="100%" height={320}>
               <PieChart>
@@ -2556,8 +2560,8 @@ function Reports() {
                   endAngle={450}
                 >
                   {classificationChartData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
+                    <Cell
+                      key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
                       stroke="#1a1a1a"
                       strokeWidth={2}
@@ -2569,8 +2573,8 @@ function Reports() {
                     const percent = ((value / classificationChartData.reduce((sum, item) => sum + item.value, 0)) * 100).toFixed(1)
                     return [`${value} وثيقة (${percent}%)`, props.payload.name]
                   }}
-                  contentStyle={{ 
-                    backgroundColor: '#1a1a1a', 
+                  contentStyle={{
+                    backgroundColor: '#1a1a1a',
                     border: '1px solid #00BCD4',
                     borderRadius: '8px',
                     padding: '10px',
@@ -2600,14 +2604,14 @@ function Reports() {
           </div>
 
           {/* الاتجاه - أعمدة محسّنة */}
-          <div className="card bg-gradient-to-br from-base-900 to-base-800 border-blue-500/20 shadow-xl">
+          <div className={`rounded-xl p-6 shadow-xl ${theme === 'dark' ? 'card bg-gradient-to-br from-base-900 to-base-800 border-blue-500/20' : 'bg-white border-2 border-blue-200'}`}>
             <div className="mb-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-400/10 border border-blue-400/40 flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-blue-300/70 border-b-transparent border-l-transparent rotate-45"></div>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${theme === 'dark' ? 'bg-gradient-to-br from-blue-500/20 to-blue-400/10 border border-blue-400/40' : 'bg-blue-100 border border-blue-300'}`}>
+                <div className={`w-6 h-6 border-2 border-b-transparent border-l-transparent rotate-45 ${theme === 'dark' ? 'border-blue-300/70' : 'border-blue-500'}`}></div>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-blue-400">توزيع حسب الاتجاه</h3>
-                <p className="text-xs text-text-secondary">صادر مقابل وارد</p>
+                <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>توزيع حسب الاتجاه</h3>
+                <p className={`text-xs ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>صادر مقابل وارد</p>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={320}>
@@ -2619,20 +2623,20 @@ function Reports() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.3} />
-                <XAxis 
-                  dataKey="name" 
-                  stroke="#888" 
+                <XAxis
+                  dataKey="name"
+                  stroke="#888"
                   tick={{ fill: '#888', fontSize: 12 }}
                   tickMargin={8}
                 />
-                <YAxis 
-                  stroke="#888" 
+                <YAxis
+                  stroke="#888"
                   tick={{ fill: '#888', fontSize: 11 }}
                   tickMargin={8}
                 />
                 <Tooltip
-                  contentStyle={{ 
-                    backgroundColor: '#1a1a1a', 
+                  contentStyle={{
+                    backgroundColor: '#1a1a1a',
                     border: '1px solid #00BCD4',
                     borderRadius: '8px',
                     padding: '10px'
@@ -2640,8 +2644,8 @@ function Reports() {
                   labelStyle={{ color: '#00BCD4', fontWeight: 'bold' }}
                   itemStyle={{ color: '#00BCD4' }}
                 />
-                <Bar 
-                  dataKey="value" 
+                <Bar
+                  dataKey="value"
                   fill="url(#barGradient1)"
                   radius={[8, 8, 0, 0]}
                 />
@@ -2650,10 +2654,10 @@ function Reports() {
           </div>
 
           {/* المصدر - أعمدة محسّنة */}
-          <div className="card bg-gradient-to-br from-base-900 to-base-800 border-green-500/20 shadow-xl">
+          <div className={`rounded-xl p-6 shadow-xl ${theme === 'dark' ? 'card bg-gradient-to-br from-base-900 to-base-800 border-green-500/20' : 'bg-white border-2 border-green-200'}`}>
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-green-400 mb-1">توزيع حسب المصدر</h3>
-              <p className="text-xs text-text-secondary">ملف مقابل سكانر</p>
+              <h3 className={`text-lg font-semibold mb-1 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>توزيع حسب المصدر</h3>
+              <p className={`text-xs ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>ملف مقابل سكانر</p>
             </div>
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={sourceChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
@@ -2664,20 +2668,20 @@ function Reports() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.3} />
-                <XAxis 
-                  dataKey="name" 
-                  stroke="#888" 
+                <XAxis
+                  dataKey="name"
+                  stroke="#888"
                   tick={{ fill: '#888', fontSize: 12 }}
                   tickMargin={8}
                 />
-                <YAxis 
-                  stroke="#888" 
+                <YAxis
+                  stroke="#888"
                   tick={{ fill: '#888', fontSize: 11 }}
                   tickMargin={8}
                 />
                 <Tooltip
-                  contentStyle={{ 
-                    backgroundColor: '#1a1a1a', 
+                  contentStyle={{
+                    backgroundColor: '#1a1a1a',
                     border: '1px solid #4ECDC4',
                     borderRadius: '8px',
                     padding: '10px'
@@ -2685,8 +2689,8 @@ function Reports() {
                   labelStyle={{ color: '#4ECDC4', fontWeight: 'bold' }}
                   itemStyle={{ color: '#4ECDC4' }}
                 />
-                <Bar 
-                  dataKey="value" 
+                <Bar
+                  dataKey="value"
                   fill="url(#barGradient2)"
                   radius={[8, 8, 0, 0]}
                 />
@@ -2697,30 +2701,30 @@ function Reports() {
       </div>
 
       {/* أكثر المستخدمين نشاطاً (للمدير فقط) */}
-      {isAdmin && <div className="card">
-        <h2 className="text-xl font-semibold text-cyan-400 mb-4">أكثر المستخدمين نشاطاً</h2>
+      {isAdmin && <div className={`rounded-xl p-6 ${theme === 'dark' ? 'card' : 'bg-white border-2 border-cyan-200 shadow-lg'}`}>
+        <h2 className={`text-xl font-semibold mb-4 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>أكثر المستخدمين نشاطاً</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[rgba(0,188,212,0.12)]">
-                <th className="text-right py-3 px-4 text-text-secondary font-semibold">#</th>
-                <th className="text-right py-3 px-4 text-text-secondary font-semibold">اسم المستخدم</th>
-                <th className="text-right py-3 px-4 text-text-secondary font-semibold">الاسم الكامل</th>
-                <th className="text-right py-3 px-4 text-text-secondary font-semibold">عدد الوثائق</th>
+              <tr className={`${theme === 'dark' ? 'border-b border-[rgba(0,188,212,0.12)]' : 'border-b-2 border-cyan-200 bg-cyan-50/50'}`}>
+                <th className={`text-right py-3 px-4 font-semibold ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>#</th>
+                <th className={`text-right py-3 px-4 font-semibold ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>اسم المستخدم</th>
+                <th className={`text-right py-3 px-4 font-semibold ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>الاسم الكامل</th>
+                <th className={`text-right py-3 px-4 font-semibold ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>عدد الوثائق</th>
               </tr>
             </thead>
             <tbody>
               {stats.top_users.map((user, idx) => (
-                <tr key={idx} className="border-b border-[rgba(0,188,212,0.06)] hover:bg-base-800/30">
-                  <td className="py-3 px-4 text-text-secondary">{idx + 1}</td>
-                  <td className="py-3 px-4 text-cyan-400 font-mono">{user.username}</td>
-                  <td className="py-3 px-4">{user.full_name || '-'}</td>
-                  <td className="py-3 px-4 font-semibold">{user.document_count}</td>
+                <tr key={idx} className={`${theme === 'dark' ? 'border-b border-[rgba(0,188,212,0.06)] hover:bg-base-800/30' : 'border-b border-cyan-100 hover:bg-cyan-50/50'}`}>
+                  <td className={`py-3 px-4 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>{idx + 1}</td>
+                  <td className={`py-3 px-4 font-mono ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>{user.username}</td>
+                  <td className={`py-3 px-4 ${theme === 'dark' ? '' : 'text-slate-700'}`}>{user.full_name || '-'}</td>
+                  <td className={`py-3 px-4 font-semibold ${theme === 'dark' ? '' : 'text-slate-700'}`}>{user.document_count}</td>
                 </tr>
               ))}
               {stats.top_users.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="text-center py-8 text-text-secondary">
+                  <td colSpan={4} className={`text-center py-8 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>
                     لا توجد بيانات
                   </td>
                 </tr>
@@ -2962,7 +2966,7 @@ function Reports() {
                       </div>
                     )}
                   </div>
-                  
+
                   {(reportType === 'user_activity' || reportType === 'login_activity') && (
                     <div className="text-xs text-text-secondary bg-base-800/50 p-2 rounded-lg border border-[rgba(255,255,255,0.05)]">
                       ملاحظة: سيتم عرض الوقت بدقة (الساعة والدقيقة) في التقرير
@@ -2994,7 +2998,7 @@ function Reports() {
                       ))}
                     </select>
                   </div>
-                  
+
                   {reportType === 'user_activity' && exportUserId && (
                     <div>
                       <label className="block text-sm font-medium text-text-secondary mb-2">

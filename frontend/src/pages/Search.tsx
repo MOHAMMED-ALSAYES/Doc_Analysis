@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { api } from '../lib/api'
+import { useTheme } from '../contexts/ThemeContext'
 
 type SearchResult = {
   id: number
@@ -26,6 +27,7 @@ type StudentResult = {
 }
 
 function Search() {
+  const { theme } = useTheme()
   const [activeTab, setActiveTab] = useState<'documents' | 'students'>('documents')
   const [query, setQuery] = useState('')
   const [searchField, setSearchField] = useState<'all' | 'title' | 'content'>('all')
@@ -87,7 +89,7 @@ function Search() {
         classification: filterType || undefined,
         direction: filterDirection || undefined,
       })
-      
+
       setResults(res.data.results || [])
       const endTime = performance.now()
       setSearchTime((endTime - startTime) / 1000)
@@ -235,15 +237,15 @@ function Search() {
     options: FormatOptions = { stripDiacritics: true }
   ): string => {
     if (!text) return 'لا يوجد نص مستخرج'
-    
+
     let cleaned = text
       .replace(/\r\n/g, '\n')
       .replace(/\r/g, '\n')
       .replace(/[ \t]+/g, ' ')
       .replace(/\n{3,}/g, '\n\n')
-    
+
     let lines = cleaned.split('\n').map(line => line.trim()).filter(line => line.length > 0)
-    
+
     const merged: string[] = []
     for (let i = 0; i < lines.length; i++) {
       if (i === 0) {
@@ -254,27 +256,27 @@ function Search() {
         merged.push(lines[i])
       }
     }
-    
+
     cleaned = merged.join('\n')
-    
+
     cleaned = cleaned
       .replace(/([.!?؛،:])([^\s])/g, '$1 $2')
       .replace(/([.!?])\s+([A-Zأ-ي])/g, '$1\n\n$2')
-    
+
     cleaned = cleaned.trim().replace(/\n{3,}/g, '\n\n')
-    
+
     // إضافة مسافات بين الأرقام والحروف إذا كانت ملاصقة
     cleaned = cleaned
       .replace(/(\d)(?=[^\s\d])/g, '$1 ')
       .replace(/([^\s\d])(?=\d)/g, '$1 ')
-    
+
     // معالجة حالات مثل "نوالالرجوي" (تكرار "ال" المتتالية)
     cleaned = cleaned.replace(/ال(?=ال[\u0600-\u06FF])/g, 'ال ')
-    
+
     if (options.stripDiacritics !== false) {
       cleaned = stripArabicDiacritics(cleaned)
     }
-    
+
     return cleaned || 'لا يوجد نص مستخرج'
   }
 
@@ -457,7 +459,7 @@ function Search() {
       </body>
       </html>
     `
-    
+
     printWindow.document.write(printContent)
     printWindow.document.close()
   }
@@ -486,22 +488,21 @@ function Search() {
   return (
     <div className="space-y-6">
       {/* رأس الصفحة */}
-      <div className="card">
-        <h1 className="text-3xl font-bold text-cyan-400 mb-2">البحث المتقدم</h1>
-        <p className="text-text-secondary">
+      <div className={`rounded-xl p-6 ${theme === 'dark' ? 'card' : 'bg-gradient-to-r from-cyan-500 to-cyan-600 shadow-lg'}`}>
+        <h1 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-cyan-400' : 'text-white'}`}>البحث المتقدم</h1>
+        <p className={theme === 'dark' ? 'text-text-secondary' : 'text-cyan-100'}>
           ابحث في محتوى الوثائق، العناوين، أو ابحث عن الطلاب ودرجاتهم
         </p>
       </div>
 
       {/* التبويبات */}
-      <div className="card">
-        <div className="flex gap-2 border-b border-[rgba(0,188,212,0.12)]">
+      <div className={`rounded-xl p-4 ${theme === 'dark' ? 'card' : 'bg-white border border-slate-200 shadow-sm'}`}>
+        <div className={`flex gap-2 border-b ${theme === 'dark' ? 'border-[rgba(0,188,212,0.12)]' : 'border-slate-200'}`}>
           <button
-            className={`px-6 py-3 font-semibold transition ${
-              activeTab === 'documents'
-                ? 'text-cyan-400 border-b-2 border-cyan-400'
-                : 'text-text-secondary hover:text-cyan-400'
-            }`}
+            className={`px-6 py-3 font-semibold transition ${activeTab === 'documents'
+              ? `border-b-2 ${theme === 'dark' ? 'text-cyan-400 border-cyan-400' : 'text-cyan-600 border-cyan-600'}`
+              : `${theme === 'dark' ? 'text-text-secondary hover:text-cyan-400' : 'text-slate-500 hover:text-cyan-600'}`
+              }`}
             onClick={() => {
               setActiveTab('documents')
               setQuery('')
@@ -513,11 +514,10 @@ function Search() {
             بحث الوثائق
           </button>
           <button
-            className={`px-6 py-3 font-semibold transition ${
-              activeTab === 'students'
-                ? 'text-cyan-400 border-b-2 border-cyan-400'
-                : 'text-text-secondary hover:text-cyan-400'
-            }`}
+            className={`px-6 py-3 font-semibold transition ${activeTab === 'students'
+              ? `border-b-2 ${theme === 'dark' ? 'text-cyan-400 border-cyan-400' : 'text-cyan-600 border-cyan-600'}`
+              : `${theme === 'dark' ? 'text-text-secondary hover:text-cyan-400' : 'text-slate-500 hover:text-cyan-600'}`
+              }`}
             onClick={() => {
               setActiveTab('students')
               setQuery('')
@@ -537,7 +537,7 @@ function Search() {
           <div className="flex-1">
             <input
               type="text"
-              className="w-full px-4 py-3 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition text-lg"
+              className={`w-full px-4 py-3 rounded-xl border focus:outline-none transition text-lg ${theme === 'dark' ? 'bg-base-900 border-[rgba(0,188,212,0.12)] focus:border-cyan-500' : 'bg-slate-50 border-slate-300 focus:border-cyan-500 text-slate-800'}`}
               placeholder={activeTab === 'students' ? 'ابحث برقم الطالب أو الاسم...' : 'ابحث في الوثائق...'}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -556,72 +556,72 @@ function Search() {
 
         {/* خيارات البحث - للوثائق فقط */}
         {activeTab === 'documents' && (
-        <div className="grid md:grid-cols-4 gap-3">
-          <div>
-            <label className="block text-xs text-text-secondary mb-1">البحث في</label>
-            <select
-              className="w-full px-3 py-2 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition text-sm"
-              value={searchField}
-              onChange={(e) => setSearchField(e.target.value as any)}
-            >
-              <option value="all">الكل (عنوان + محتوى)</option>
-              <option value="title">العنوان فقط</option>
-              <option value="content">المحتوى فقط</option>
-            </select>
+          <div className="grid md:grid-cols-4 gap-3">
+            <div>
+              <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>البحث في</label>
+              <select
+                className={`w-full px-3 py-2 rounded-xl border focus:outline-none transition text-sm ${theme === 'dark' ? 'bg-base-900 border-[rgba(0,188,212,0.12)] focus:border-cyan-500' : 'bg-slate-50 border-slate-300 focus:border-cyan-500 text-slate-800'}`}
+                value={searchField}
+                onChange={(e) => setSearchField(e.target.value as any)}
+              >
+                <option value="all">الكل (عنوان + محتوى)</option>
+                <option value="title">العنوان فقط</option>
+                <option value="content">المحتوى فقط</option>
+              </select>
+            </div>
+            <div>
+              <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>نوع الوثيقة</label>
+              <select
+                className={`w-full px-3 py-2 rounded-xl border focus:outline-none transition text-sm ${theme === 'dark' ? 'bg-base-900 border-[rgba(0,188,212,0.12)] focus:border-cyan-500' : 'bg-slate-50 border-slate-300 focus:border-cyan-500 text-slate-800'}`}
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+              >
+                <option value="">الكل</option>
+                <option value="شهادة">شهادة</option>
+                <option value="تقرير">تقرير</option>
+                <option value="كتاب رسمي">كتاب رسمي</option>
+                <option value="نموذج">نموذج</option>
+                <option value="كشف درجات">كشف درجات</option>
+                <option value="اختبار">اختبار</option>
+                <option value="فاتورة">فاتورة</option>
+                <option value="عقد">عقد</option>
+                <option value="محضر اجتماع">محضر اجتماع</option>
+                <option value="أخرى">أخرى</option>
+              </select>
+            </div>
+            <div>
+              <label className={`block text-xs mb-1 ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>الاتجاه</label>
+              <select
+                className={`w-full px-3 py-2 rounded-xl border focus:outline-none transition text-sm ${theme === 'dark' ? 'bg-base-900 border-[rgba(0,188,212,0.12)] focus:border-cyan-500' : 'bg-slate-50 border-slate-300 focus:border-cyan-500 text-slate-800'}`}
+                value={filterDirection}
+                onChange={(e) => setFilterDirection(e.target.value)}
+              >
+                <option value="">الكل</option>
+                <option value="صادر">صادر</option>
+                <option value="وارد">وارد</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                className="w-full px-3 py-2 rounded-xl border border-[rgba(0,188,212,0.12)] hover:border-cyan-500 text-text-secondary hover:text-cyan-400 transition text-sm"
+                onClick={() => {
+                  setQuery('')
+                  setSearchField('all')
+                  setFilterType('')
+                  setFilterDirection('')
+                  setResults([])
+                }}
+              >
+                مسح الكل
+              </button>
+            </div>
           </div>
-          <div>
-            <label className="block text-xs text-text-secondary mb-1">نوع الوثيقة</label>
-            <select
-              className="w-full px-3 py-2 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition text-sm"
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-            >
-              <option value="">الكل</option>
-              <option value="شهادة">شهادة</option>
-              <option value="تقرير">تقرير</option>
-              <option value="كتاب رسمي">كتاب رسمي</option>
-              <option value="نموذج">نموذج</option>
-              <option value="كشف درجات">كشف درجات</option>
-              <option value="اختبار">اختبار</option>
-              <option value="فاتورة">فاتورة</option>
-              <option value="عقد">عقد</option>
-              <option value="محضر اجتماع">محضر اجتماع</option>
-              <option value="أخرى">أخرى</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-text-secondary mb-1">الاتجاه</label>
-            <select
-              className="w-full px-3 py-2 rounded-xl bg-base-900 border border-[rgba(0,188,212,0.12)] focus:border-cyan-500 focus:outline-none transition text-sm"
-              value={filterDirection}
-              onChange={(e) => setFilterDirection(e.target.value)}
-            >
-              <option value="">الكل</option>
-              <option value="صادر">صادر</option>
-              <option value="وارد">وارد</option>
-            </select>
-          </div>
-          <div className="flex items-end">
-            <button
-              className="w-full px-3 py-2 rounded-xl border border-[rgba(0,188,212,0.12)] hover:border-cyan-500 text-text-secondary hover:text-cyan-400 transition text-sm"
-              onClick={() => {
-                setQuery('')
-                setSearchField('all')
-                setFilterType('')
-                setFilterDirection('')
-                setResults([])
-              }}
-            >
-              مسح الكل
-            </button>
-          </div>
-        </div>
         )}
 
         {msg && (
           <div className="mt-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
             {msg}
-        </div>
+          </div>
         )}
       </div>
 
@@ -641,7 +641,7 @@ function Search() {
             {results.map((result) => (
               <div
                 key={result.id}
-                className="p-4 rounded-xl border border-[rgba(0,188,212,0.12)] hover:border-cyan-500/50 transition"
+                className={`p-4 rounded-xl border transition ${theme === 'dark' ? 'border-[rgba(0,188,212,0.12)] hover:border-cyan-500/50' : 'bg-white border-slate-200 hover:border-cyan-400 shadow-sm'}`}
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
@@ -658,11 +658,10 @@ function Search() {
                         </span>
                       )}
                       {result.direction && (
-                        <span className={`px-2 py-0.5 rounded ${
-                          result.direction === 'صادر'
-                            ? 'bg-blue-500/10 text-blue-400'
-                            : 'bg-green-500/10 text-green-400'
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded ${result.direction === 'صادر'
+                          ? 'bg-blue-500/10 text-blue-400'
+                          : 'bg-green-500/10 text-green-400'
+                          }`}>
                           {result.direction}
                         </span>
                       )}
@@ -682,7 +681,7 @@ function Search() {
                 </div>
                 {result.snippet && (
                   <div
-                    className="text-sm text-text-secondary mt-2 p-3 rounded-lg bg-base-900"
+                    className={`text-sm mt-2 p-3 rounded-lg ${theme === 'dark' ? 'text-text-secondary bg-base-900' : 'text-slate-600 bg-slate-50'}`}
                     dangerouslySetInnerHTML={{
                       __html: highlightText(result.snippet, query),
                     }}
@@ -780,17 +779,15 @@ function Search() {
       {/* Toast Notifications */}
       {toast && (
         <div
-          className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-4 rounded-xl shadow-2xl border-2 transition-all duration-300 ${
-            toast.type === 'success'
-              ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-400/50 text-green-300'
-              : 'bg-gradient-to-r from-red-500/20 to-pink-500/20 border-red-400/50 text-red-300'
-          }`}
+          className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-4 rounded-xl shadow-2xl border-2 transition-all duration-300 ${toast.type === 'success'
+            ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-400/50 text-green-300'
+            : 'bg-gradient-to-r from-red-500/20 to-pink-500/20 border-red-400/50 text-red-300'
+            }`}
           style={{ animation: 'slideUp 0.3s ease-out' }}
         >
           <div className="flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${
-              toast.type === 'success' ? 'bg-green-400' : 'bg-red-400'
-            }`}></div>
+            <div className={`w-3 h-3 rounded-full ${toast.type === 'success' ? 'bg-green-400' : 'bg-red-400'
+              }`}></div>
             <span className="font-semibold">{toast.message}</span>
           </div>
         </div>
@@ -822,7 +819,7 @@ function Search() {
           {studentAnalysis && !loadingAnalysis && studentAnalysis.statistics && (
             <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30">
               <h3 className="text-lg font-semibold text-cyan-400 mb-4">تحليل الأداء</h3>
-              
+
               {/* إحصائيات عامة */}
               <div className="grid md:grid-cols-4 gap-4 mb-4">
                 <div className="p-3 rounded-lg bg-base-900/50 border border-[rgba(0,188,212,0.1)]">
@@ -856,15 +853,14 @@ function Search() {
                 <div className="mb-4 p-4 rounded-lg bg-base-900/50 border border-[rgba(0,188,212,0.1)]">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-sm font-semibold text-cyan-400">الاتجاه العام</div>
-                    <div className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-                      studentAnalysis.statistics.overall_trend === 'improving'
-                        ? 'bg-emerald-500/20 text-emerald-400'
-                        : studentAnalysis.statistics.overall_trend === 'declining'
+                    <div className={`px-3 py-1 rounded-lg text-xs font-semibold ${studentAnalysis.statistics.overall_trend === 'improving'
+                      ? 'bg-emerald-500/20 text-emerald-400'
+                      : studentAnalysis.statistics.overall_trend === 'declining'
                         ? 'bg-red-500/20 text-red-400'
                         : 'bg-yellow-500/20 text-yellow-400'
-                    }`}>
+                      }`}>
                       {studentAnalysis.statistics.overall_trend === 'improving' ? 'تحسن' :
-                       studentAnalysis.statistics.overall_trend === 'declining' ? 'انخفاض' : 'مستقر'}
+                        studentAnalysis.statistics.overall_trend === 'declining' ? 'انخفاض' : 'مستقر'}
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-sm">
@@ -878,9 +874,8 @@ function Search() {
                     </div>
                     <div>
                       <span className="text-text-secondary">التغيير: </span>
-                      <span className={`font-semibold ${
-                        studentAnalysis.statistics.overall_change > 0 ? 'text-emerald-400' : 'text-red-400'
-                      }`}>
+                      <span className={`font-semibold ${studentAnalysis.statistics.overall_change > 0 ? 'text-emerald-400' : 'text-red-400'
+                        }`}>
                         {studentAnalysis.statistics.overall_change > 0 ? '+' : ''}{studentAnalysis.statistics.overall_change.toFixed(2)}%
                       </span>
                     </div>
@@ -897,13 +892,12 @@ function Search() {
                       <div key={subject} className="p-3 rounded-lg bg-base-900/50 border border-[rgba(0,188,212,0.1)]">
                         <div className="flex items-center justify-between mb-2">
                           <div className="font-semibold text-white">{subject}</div>
-                          <div className={`px-2 py-1 rounded text-xs ${
-                            perf.trend === 'improving' ? 'bg-emerald-500/20 text-emerald-400' :
+                          <div className={`px-2 py-1 rounded text-xs ${perf.trend === 'improving' ? 'bg-emerald-500/20 text-emerald-400' :
                             perf.trend === 'declining' ? 'bg-red-500/20 text-red-400' :
-                            'bg-yellow-500/20 text-yellow-400'
-                          }`}>
+                              'bg-yellow-500/20 text-yellow-400'
+                            }`}>
                             {perf.trend === 'improving' ? 'تحسن' :
-                             perf.trend === 'declining' ? 'انخفاض' : 'مستقر'}
+                              perf.trend === 'declining' ? 'انخفاض' : 'مستقر'}
                           </div>
                         </div>
                         <div className="flex items-center gap-4 text-sm">
@@ -917,9 +911,8 @@ function Search() {
                           </div>
                           <div>
                             <span className="text-text-secondary">التغيير: </span>
-                            <span className={`font-semibold ${
-                              perf.change > 0 ? 'text-emerald-400' : 'text-red-400'
-                            }`}>
+                            <span className={`font-semibold ${perf.change > 0 ? 'text-emerald-400' : 'text-red-400'
+                              }`}>
                               {perf.change > 0 ? '+' : ''}{perf.change.toFixed(2)}%
                             </span>
                           </div>
@@ -1096,9 +1089,9 @@ function Search() {
 
       {/* عرض تفاصيل الوثيقة */}
       {selectedDoc && (
-        <div className="card">
+        <div className={`rounded-xl p-6 border-2 ${theme === 'dark' ? 'card' : 'bg-white border-cyan-200 shadow-lg'}`}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-cyan-400">
+            <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-700'}`}>
               تفاصيل الوثيقة: {selectedDoc.document_number}
             </h2>
             <button
@@ -1140,11 +1133,10 @@ function Search() {
                   <div className="grid grid-cols-2 py-2 border-b border-[rgba(0,188,212,0.06)]">
                     <span className="text-text-secondary">الاتجاه:</span>
                     {selectedDoc.direction ? (
-                      <span className={`inline-block px-2 py-1 rounded-lg text-xs ${
-                        selectedDoc.direction === 'صادر'
-                          ? 'bg-blue-500/10 text-blue-400'
-                          : 'bg-green-500/10 text-green-400'
-                      }`}>
+                      <span className={`inline-block px-2 py-1 rounded-lg text-xs ${selectedDoc.direction === 'صادر'
+                        ? 'bg-blue-500/10 text-blue-400'
+                        : 'bg-green-500/10 text-green-400'
+                        }`}>
                         {selectedDoc.direction}
                       </span>
                     ) : (
@@ -1154,24 +1146,22 @@ function Search() {
                   <div className="grid grid-cols-2 py-2 border-b border-[rgba(0,188,212,0.06)]">
                     <span className="text-text-secondary">دقة OCR:</span>
                     <div>
-                      <span className={`font-semibold ${
-                        selectedDoc.ocr_accuracy >= 90
-                          ? 'text-green-400'
-                          : selectedDoc.ocr_accuracy >= 70
+                      <span className={`font-semibold ${selectedDoc.ocr_accuracy >= 90
+                        ? 'text-green-400'
+                        : selectedDoc.ocr_accuracy >= 70
                           ? 'text-yellow-400'
                           : 'text-red-400'
-                      }`}>
+                        }`}>
                         {selectedDoc.ocr_accuracy || 0}%
                       </span>
                       <div className="w-full bg-base-900 h-1 rounded mt-1">
                         <div
-                          className={`h-1 rounded ${
-                            selectedDoc.ocr_accuracy >= 90
-                              ? 'bg-green-400'
-                              : selectedDoc.ocr_accuracy >= 70
+                          className={`h-1 rounded ${selectedDoc.ocr_accuracy >= 90
+                            ? 'bg-green-400'
+                            : selectedDoc.ocr_accuracy >= 70
                               ? 'bg-yellow-400'
                               : 'bg-red-400'
-                          }`}
+                            }`}
                           style={{ width: `${selectedDoc.ocr_accuracy || 0}%` }}
                         />
                       </div>
@@ -1238,7 +1228,7 @@ function Search() {
                 النص المستخرج (OCR)
               </h3>
               <div className="p-4 rounded-xl bg-base-900 max-h-96 overflow-y-auto border border-[rgba(0,188,212,0.12)]">
-                <div 
+                <div
                   className="text-sm text-text-secondary whitespace-pre-wrap font-sans leading-relaxed"
                   style={{
                     fontFamily: "'Segoe UI', 'Tajawal', 'Arial', sans-serif",
@@ -1253,9 +1243,9 @@ function Search() {
                 </div>
               </div>
               {selectedDoc.content_text && (
-                <div className="mt-2 text-xs text-text-secondary text-center">
-                  إجمالي الأحرف: {selectedDoc.content_text.length.toLocaleString('ar')} • 
-                  إجمالي الكلمات: {selectedDoc.content_text.split(/\s+/).filter(w => w.length > 0).length.toLocaleString('ar')}
+                <div className={`mt-2 text-xs text-center ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-500'}`}>
+                  إجمالي الأحرف: {selectedDoc.content_text.length.toLocaleString('ar')} •
+                  إجمالي الكلمات: {selectedDoc.content_text.split(/\s+/).filter((w: string) => w.length > 0).length.toLocaleString('ar')}
                 </div>
               )}
             </div>
@@ -1265,8 +1255,8 @@ function Search() {
 
       {showPrintPreview && selectedDoc && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-4">
-          <div className="bg-base-800 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-cyan-500/20">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(0,188,212,0.15)]">
+          <div className={`rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border ${theme === 'dark' ? 'bg-base-800 border-cyan-500/20' : 'bg-white border-cyan-200'}`}>
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${theme === 'dark' ? 'border-[rgba(0,188,212,0.15)]' : 'border-slate-100'}`}>
               <div>
                 <p className="text-xs text-text-secondary">معاينة قبل الطباعة</p>
                 <h3 className="text-xl font-semibold text-cyan-400">
@@ -1280,7 +1270,7 @@ function Search() {
                 إغلاق
               </button>
             </div>
-            <div className="p-6 overflow-y-auto max-h-[70vh] space-y-4 text-sm leading-relaxed text-text-secondary">
+            <div className={`p-6 overflow-y-auto max-h-[70vh] space-y-4 text-sm leading-relaxed ${theme === 'dark' ? 'text-text-secondary' : 'text-slate-600'}`}>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-text-secondary text-xs mb-1">رقم الوثيقة</p>

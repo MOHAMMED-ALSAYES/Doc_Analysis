@@ -1,5 +1,6 @@
 import React from 'react'
 import { Route, Routes, Navigate } from 'react-router-dom'
+import { useTheme } from './contexts/ThemeContext'
 import Navbar from './components/Navbar'
 import Protected from './components/Protected'
 import AdminRoute from './components/AdminRoute'
@@ -16,32 +17,47 @@ import AdminActivity from './pages/AdminActivity'
 import Reports from './pages/Reports'
 
 function App() {
+  const { theme } = useTheme()
+
   return (
     <>
       {/* خلفية متدرجة مع تأثيرات - ثابتة لجميع الصفحات */}
-      <div className="fixed inset-0 bg-gradient-to-br from-base-950 via-base-900 to-base-950 -z-10"></div>
-      
-      {/* تأثيرات دائرية متحركة */}
-      <div className="fixed top-0 left-0 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-3xl animate-pulse -z-10" style={{ animationDuration: '4s' }}></div>
-      <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-3xl animate-pulse -z-10" style={{ animationDelay: '1s', animationDuration: '4s' }}></div>
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-3xl animate-pulse -z-10" style={{ animationDelay: '2s', animationDuration: '6s' }}></div>
-      <div className="fixed top-1/4 right-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-3xl animate-pulse -z-10" style={{ animationDelay: '0.5s', animationDuration: '5s' }}></div>
-      <div className="fixed bottom-1/4 left-1/4 w-[450px] h-[450px] bg-teal-500/8 rounded-full blur-3xl animate-pulse -z-10" style={{ animationDelay: '1.5s', animationDuration: '5.5s' }}></div>
-      
-      {/* خطوط شبكية */}
-      <div className="fixed inset-0 opacity-5 -z-10" style={{
-        backgroundImage: 'linear-gradient(rgba(0,188,212,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,188,212,0.1) 1px, transparent 1px)',
-        backgroundSize: '50px 50px'
-      }}></div>
+      {theme === 'dark' ? (
+        <>
+          <div className="fixed inset-0 bg-gradient-to-br from-base-950 via-base-900 to-base-950 -z-10"></div>
 
-      {/* طبقة توهج إضافية */}
-      <div className="fixed inset-0 bg-gradient-to-t from-cyan-500/5 via-transparent to-blue-500/5 pointer-events-none -z-10"></div>
+          {/* تأثيرات دائرية متحركة - الوضع الداكن */}
+          <div className="fixed top-0 left-0 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-3xl animate-pulse -z-10" style={{ animationDuration: '4s' }}></div>
+          <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-3xl animate-pulse -z-10" style={{ animationDelay: '1s', animationDuration: '4s' }}></div>
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-3xl animate-pulse -z-10" style={{ animationDelay: '2s', animationDuration: '6s' }}></div>
+          <div className="fixed top-1/4 right-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-3xl animate-pulse -z-10" style={{ animationDelay: '0.5s', animationDuration: '5s' }}></div>
+          <div className="fixed bottom-1/4 left-1/4 w-[450px] h-[450px] bg-teal-500/8 rounded-full blur-3xl animate-pulse -z-10" style={{ animationDelay: '1.5s', animationDuration: '5.5s' }}></div>
+
+          {/* خطوط شبكية */}
+          <div className="fixed inset-0 opacity-5 -z-10" style={{
+            backgroundImage: 'linear-gradient(rgba(0,188,212,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,188,212,0.1) 1px, transparent 1px)',
+            backgroundSize: '50px 50px'
+          }}></div>
+
+          {/* طبقة توهج إضافية */}
+          <div className="fixed inset-0 bg-gradient-to-t from-cyan-500/5 via-transparent to-blue-500/5 pointer-events-none -z-10"></div>
+        </>
+      ) : (
+        <>
+          {/* خلفية الوضع الفاتح - بسيطة ونظيفة */}
+          <div className="fixed inset-0 bg-white -z-10"></div>
+
+          {/* تأثيرات خفيفة جداً للوضع الفاتح */}
+          <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-cyan-100/20 rounded-full blur-3xl -z-10"></div>
+          <div className="fixed bottom-0 left-0 w-[400px] h-[400px] bg-blue-100/15 rounded-full blur-3xl -z-10"></div>
+        </>
+      )}
 
       <div className="min-h-screen relative z-0">
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/change-password" element={<ChangePassword />} />
-          <Route element={<Protected />}> 
+          <Route element={<Protected />}>
             <Route path="/" element={
               <>
                 <Navbar />
@@ -90,7 +106,7 @@ function App() {
                 </div>
               </>
             } />
-            <Route element={<AdminRoute />}> 
+            <Route element={<AdminRoute />}>
               <Route path="/admin" element={
                 <>
                   <Navbar />
