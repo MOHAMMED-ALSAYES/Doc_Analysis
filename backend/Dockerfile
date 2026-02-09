@@ -1,4 +1,4 @@
-# Production Dockerfile for Render.com deployment
+# Production Dockerfile for Render.com deployment (v2 - Force Rebuild)
 FROM python:3.11-slim
 
 # Environment variables
