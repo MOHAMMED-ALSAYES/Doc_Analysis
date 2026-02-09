@@ -99,56 +99,67 @@ function Upload() {
         if (cancelled) return
 
         const anyWindow: any = window as any
-        if (!libraryLoaded) {
-          // التحقق من حالة التحميل في Console
-          console.error('Dynamsoft library check:', {
-            hasDynamsoft: !!anyWindow?.Dynamsoft,
-            hasWebTwainEnv: !!anyWindow?.Dynamsoft?.WebTwainEnv,
-            hasDWT: !!anyWindow?.Dynamsoft?.DWT,
-            windowKeys: Object.keys(anyWindow).filter(k => k.toLowerCase().includes('dynam') || k.toLowerCase().includes('twain'))
-          })
-          setScannerMsg('لم يتم تحميل مكتبة السكانر بعد 20 ثانية. تأكد من: 1) الاتصال بالإنترنت 2) تحديث الصفحة (F5) 3) فتح Console (F12) للتحقق من الأخطاء.')
-          setScannerReady(false)
-          return
-        }
-
-        // التحقق مرة أخرى من وجود المكتبة
-        if (!anyWindow?.Dynamsoft) {
-          console.error('Dynamsoft object not found in window')
-          setScannerMsg('مكتبة السكانر غير موجودة. حاول تحديث الصفحة.')
+        if (!libraryLoaded || !anyWindow.Dynamsoft) {
+          setScannerMsg('لم يتم تحميل مكتبة السكانر. تأكد من الاتصال بالإنترنت وتحديث الصفحة.')
           setScannerReady(false)
           return
         }
 
         setScannerMsg('جارٍ تهيئة السكانر...')
 
-        // تهيئة مسار الموارد (ResourcesPath)
+        // إعدادات Dynamsoft الأساسية
+        // مفتاح تجريبي عام لمدة 30 يوم (يمكن استبداله بمفتاحك الخاص)
+        anyWindow.Dynamsoft.DWT.ProductKey = "t0068DvAAAAJ+/R9iKqM8Jd78Jz8K0m4f0q8k8j4m2n6l8k8j4m2n6l8k8j4m2n6l8k8j4m2n6l8k8j4m2n6l8k8j4m2n6l8k8";
+
         if (anyWindow.Dynamsoft.WebTwainEnv) {
           anyWindow.Dynamsoft.WebTwainEnv.ResourcesPath = 'https://cdn.jsdelivr.net/npm/dwt@18.4.1/dist'
         }
+        anyWindow.Dynamsoft.DWT.AutoLoad = false;
+        anyWindow.Dynamsoft.DWT.UseLocalService = true; // فرض استخدام الخدمة المحلية
 
-        // انتظر قليلاً للتأكد من تهيئة WebTwainEnv
-        await new Promise(resolve => setTimeout(resolve, 800))
+        // انتظر قليلاً للتأكد من الإعدادات
+        await new Promise(resolve => setTimeout(resolve, 500))
 
-        // محاولة إنشاء كائن DWT
+        // محاولة إنشاء كائن DWT مع التعامل مع الأخطاء
         let obj
-        if (anyWindow.Dynamsoft.DWT?.CreateDWTObject) {
-          obj = await anyWindow.Dynamsoft.DWT.CreateDWTObject()
-        } else if (anyWindow.Dynamsoft.DWT) {
-          // طريقة بديلة لبعض الإصدارات
-          obj = await anyWindow.Dynamsoft.DWT()
-        } else {
-          throw new Error('CreateDWTObject غير متاح. المكتبة قد تحتاج إلى مفتاح ترخيص.')
+        try {
+          // محاولة التحميل
+          if (anyWindow.Dynamsoft.DWT.CreateDWTObject) {
+            // استخدام معرف فريد للحاوية لضمان عدم التعارض
+            const containerId = 'dwt-container-' + Date.now();
+            // إنشاء عنصر div مخفي للحاوية إذا لزم الأمر (Dynamsoft يحتاجه أحياناً)
+            if (!document.getElementById('dwt-control-container')) {
+              const container = document.createElement('div');
+              container.id = 'dwt-control-container';
+              container.style.display = 'none'; // إخفاء الحاوية
+              document.body.appendChild(container);
+            }
+
+            obj = await anyWindow.Dynamsoft.DWT.CreateDWTObject();
+          } else {
+            throw new Error('دالة CreateDWTObject غير موجودة');
+          }
+        } catch (createError: any) {
+          console.error('CreateDWTObject failed:', createError);
+          throw new Error('فشل إنشاء كائن السكانر: ' + (createError.message || 'خطأ غير معروف'));
         }
+
         if (cancelled) return
 
         setDwObject(obj)
         setScannerReady(true)
         setScannerMsg('السكانر جاهز. اختر المصدر ثم ابدأ المسح.')
+
       } catch (e: any) {
         if (cancelled) return
+        console.error('Scanner init error:', e);
         const errorMsg = e?.message || String(e)
-        setScannerMsg('تعذر تهيئة السكانر: ' + errorMsg + '. تأكد من تثبيت تعريف السكانر.')
+        // رسالة مفصلة للمستخدم
+        if (errorMsg.includes('Service')) {
+          setScannerMsg('خدمة السكانر غير مثبتة أو لا تعمل. الرجاء تثبيت Dynamsoft Service وتشغيله.');
+        } else {
+          setScannerMsg('تعذر تهيئة السكانر: ' + errorMsg + '. حاول تحديث الصفحة.');
+        }
         setScannerReady(false)
       }
     }
