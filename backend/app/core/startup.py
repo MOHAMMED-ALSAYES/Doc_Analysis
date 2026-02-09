@@ -11,6 +11,7 @@ DEFAULT_ROLES = {
         "manage_users": True,
         "manage_permissions": True,
         "view_all_documents": True,
+        "delete_documents": True,  # ميزة الحذف
         "analyze_all": True,
         "view_all_analytics": True,
         "manage_backups": True,
@@ -35,6 +36,20 @@ def seed_roles_and_admin(db: Session):
                 db.add(role)
                 db.commit()
                 print(f"[OK] تم إنشاء الدور: {name}")
+            else:
+                # تحديث الصلاحيات إذا كان الدور موجوداً
+                # دمج الصلاحيات الجديدة مع القديمة أو استبدالها (هنا نستبدل لضمان التحديث)
+                current_perms = role.permissions or {}
+                # نقوم بتحديث القيم الموجودة وإضافة الجديدة
+                updated_perms = current_perms.copy()
+                updated_perms.update(perms)
+                
+                # إذا كانت الصلاحيات مختلفة، نقوم بالحفظ
+                if role.permissions != updated_perms:
+                    role.permissions = updated_perms
+                    db.add(role) # وضع علامة للتحديث
+                    db.commit()
+                    print(f"[OK] تم تحديث صلاحيات الدور: {name}")
         
         admin_role = db.query(Role).filter(Role.name == "system_admin").first()
         

@@ -1297,14 +1297,14 @@ def delete_document(
         raise HTTPException(status_code=404, detail="الوثيقة غير موجودة")
 
     # التحقق من صلاحية الحذف
-    # للسماح بالحذف، يجب أن يملك المستخدم صلاحية 'delete_documents' أو أن يكون مسؤول النظام
-    has_permission = merged.get("delete_documents") or current_user.username == "admin"
+    # 1. هل هو الأدمن؟
+    is_admin = current_user.username == "admin" or merged.get("delete_documents")
     
-    # السماح للمالك أيضاً بحذف وثائقه إذا لم تكن مقيدة (اختياري، يمكن تفعيله)
-    # is_owner = doc.uploader_id == current_user.id
+    # 2. هل هو المالك؟
+    is_owner = doc.uploader_id == current_user.id
     
-    if not has_permission:
-        raise HTTPException(status_code=403, detail="ليس لديك صلاحية لحذف الوثائق")
+    if not is_admin and not is_owner:
+        raise HTTPException(status_code=403, detail="ليس لديك صلاحية لحذف هذه الوثيقة (يجب أن تكون المالك أو مسؤول النظام)")
 
     try:
         # حذف الملفات الفعلية
