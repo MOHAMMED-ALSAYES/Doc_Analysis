@@ -1303,8 +1303,15 @@ def delete_document(
     # 2. هل هو المالك؟
     is_owner = doc.uploader_id == current_user.id
     
+    # طباعة معلومات للتصحيح (Debug Logs)
+    print(f"--- DEBUG DELETE ---")
+    print(f"User: {current_user.username} (ID: {current_user.id})")
+    print(f"Doc ID: {doc.id}, Uploader ID: {doc.uploader_id}")
+    print(f"Is Admin: {is_admin}, Is Owner: {is_owner}")
+    print(f"--------------------")
+
     if not is_admin and not is_owner:
-        raise HTTPException(status_code=403, detail="ليس لديك صلاحية لحذف هذه الوثيقة (يجب أن تكون المالك أو مسؤول النظام)")
+        raise HTTPException(status_code=403, detail=f"ممنوع: المستخدم {current_user.id} ليس المالك ({doc.uploader_id}) وليست لديه صلاحية")
 
     try:
         # حذف الملفات الفعلية
